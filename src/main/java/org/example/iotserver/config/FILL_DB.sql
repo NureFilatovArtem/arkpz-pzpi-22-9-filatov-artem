@@ -5,6 +5,10 @@ DROP TABLE IF EXISTS offices CASCADE;
 DROP TABLE IF EXISTS buildings CASCADE;
 
 
+ALTER TABLE building ALTER COLUMN number_of_floors SET DEFAULT 0;
+UPDATE building SET number_of_floors = 0 WHERE number_of_floors IS NULL;
+
+ALTER TABLE building ADD COLUMN number_of_floors INT DEFAULT 0;
 CREATE TABLE buildings (
                            id SERIAL PRIMARY KEY,
                            name VARCHAR(100) NOT NULL,
