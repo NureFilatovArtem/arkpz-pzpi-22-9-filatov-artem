@@ -26,22 +26,36 @@ public class BuildingService {
         return buildingRepository.save(building);
     }
 
-    // Update an existing building
+
     public Building updateBuilding(Long id, Building updatedBuilding) {
-        // Fetch the existing building by ID
-        Optional<Building> existingBuildingOpt = buildingRepository.findById(id);
-        if (existingBuildingOpt.isPresent()) {
-            Building existingBuilding = existingBuildingOpt.get();
-            // Update fields of the existing building
-            existingBuilding.setName(updatedBuilding.getName());
-            existingBuilding.setLocation(updatedBuilding.getLocation());
-            existingBuilding.setNumberOfFloors(updatedBuilding.getNumberOfFloors());
-            // Save the updated building
-            return buildingRepository.save(existingBuilding);
-        } else {
+        // Check if the building exists
+        if (!buildingRepository.existsById(id)) {
             throw new IllegalArgumentException("Building with ID " + id + " not found.");
         }
+
+        // Overwrite the building
+        updatedBuilding.setId(id); // Ensure the same ID
+        return buildingRepository.save(updatedBuilding);
     }
+
+
+    // IT'S OPTION TO UPDATE INFORMATION, I AM ADDING OPTION TO OVERWRITE TO AVOID BUGS
+//    // Update an existing building
+//    public Building updateBuilding(Long id, Building updatedBuilding) {
+//        // Fetch the existing building by ID
+//        Optional<Building> existingBuildingOpt = buildingRepository.findById(id);
+//        if (existingBuildingOpt.isPresent()) {
+//            Building existingBuilding = existingBuildingOpt.get();
+//            // Update fields of the existing building
+//            existingBuilding.setName(updatedBuilding.getName());
+//            existingBuilding.setLocation(updatedBuilding.getLocation());
+//            existingBuilding.setNumberOfFloors(updatedBuilding.getNumberOfFloors());
+//            // Save the updated building
+//            return buildingRepository.save(existingBuilding);
+//        } else {
+//            throw new IllegalArgumentException("Building with ID " + id + " not found.");
+//        }
+//    }
 
     // Delete a building by ID
     public void deleteBuilding(Long id) {

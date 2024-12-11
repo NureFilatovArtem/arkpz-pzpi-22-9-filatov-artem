@@ -2,6 +2,8 @@ package org.example.iotserver.models;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -68,8 +70,10 @@ public class Building {
     }
 
     public void setOffices(List<Office> offices) {
-        this.offices = offices;
-        if (offices != null) {
+        if (offices == null) {
+            this.offices = new ArrayList<>();
+        } else {
+            this.offices = offices;
             offices.forEach(office -> office.setBuilding(this));
         }
     }
