@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Table(name = "sensor")
 public class Sensor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +21,7 @@ public class Sensor {
     private List<Measurement> measurements;
 
     // Default constructor
-    public Sensor() {
-    }
+    public Sensor () {}
 
     // Constructor with fields
     public Sensor(String type, String location, Office office, List<Measurement> measurements) {
@@ -63,6 +63,7 @@ public class Sensor {
     public void setLocation(String location) {
         this.location = location;
     }
+
 
     public List<Measurement> getMeasurements() {
         return measurements;
