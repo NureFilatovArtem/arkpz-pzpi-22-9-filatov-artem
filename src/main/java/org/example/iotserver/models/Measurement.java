@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "measurement")
+@Table(name = "measurements")
 public class Measurement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

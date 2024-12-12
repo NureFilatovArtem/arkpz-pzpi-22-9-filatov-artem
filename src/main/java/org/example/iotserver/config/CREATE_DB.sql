@@ -2,13 +2,14 @@
 
 
 
-
+DROP TABLE IF EXISTS building CASCADE;
 
 DROP TABLE IF EXISTS buildings CASCADE;
 CREATE TABLE buildings (
                            id SERIAL PRIMARY KEY,
                            name VARCHAR(100) NOT NULL,
-                           address TEXT NOT NULL
+                           address TEXT NOT NULL,
+                           number_of_floors INT DEFAULT 0
 );
 
 DROP TABLE IF EXISTS offices CASCADE;
