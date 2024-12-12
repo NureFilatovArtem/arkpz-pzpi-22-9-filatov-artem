@@ -25,6 +25,7 @@ public class Building {
     private int numberOfFloors = 0;
 
     @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference // Prevents infinite recursion
     private List<Office> offices;
 
     // Default constructor

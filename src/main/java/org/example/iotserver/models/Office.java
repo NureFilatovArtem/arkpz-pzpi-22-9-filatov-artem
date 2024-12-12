@@ -13,6 +13,7 @@ public class Office {
 
     @ManyToOne
     @JoinColumn(name = "building_id", nullable = false)
+    @JsonBackReference // Prevents recursion
     private Building building;
 
     private String name;
@@ -58,6 +59,8 @@ public class Office {
         this.floor = floor;
     }
 
+
+    @OneToMany(mappedBy = "office", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Sensor> getSensors() {
         return sensors;
     }
