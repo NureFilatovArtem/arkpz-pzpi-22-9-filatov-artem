@@ -13,26 +13,35 @@ public class Building {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
-    private String location; // Add this field for location
-    private int numberOfFloors; // Add this field for number of floors
+
+    @Column(nullable = false)
+    private String address;
+
+    private String location; // Optional
+
+    @Column(nullable = false)
+    private int numberOfFloors = 0;
 
     @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Office> offices;
 
     // Default constructor
     public Building() {
+        this.offices = new ArrayList<>();
     }
 
     // Constructor with fields
-    public Building(String name, String location, int numberOfFloors, List<Office> offices) {
-        this.name = name;
+    public Building(String name, String address, String location, int numberOfFloors, List<Office> offices) {
+        setName(name); // Ensure validation
+        setAddress(address); // Ensure validation
         this.location = location;
-        this.numberOfFloors = numberOfFloors;
-        this.offices = offices;
+        setNumberOfFloors(numberOfFloors); // Ensure validation
+        setOffices(offices); // Handles null initialization
     }
 
-    // Getters and setters
+    // Getters and setters with validation
     public Long getId() {
         return id;
     }
@@ -46,7 +55,21 @@ public class Building {
     }
 
     public void setName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
         this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be null or empty");
+        }
+        this.address = address;
     }
 
     public String getLocation() {
@@ -54,7 +77,7 @@ public class Building {
     }
 
     public void setLocation(String location) {
-        this.location = location;
+        this.location = location; // Optional, no validation needed
     }
 
     public int getNumberOfFloors() {
@@ -62,6 +85,9 @@ public class Building {
     }
 
     public void setNumberOfFloors(int numberOfFloors) {
+        if (numberOfFloors < 0) {
+            throw new IllegalArgumentException("Number of floors cannot be negative");
+        }
         this.numberOfFloors = numberOfFloors;
     }
 

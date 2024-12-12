@@ -1,5 +1,7 @@
 package org.example.iotserver.controllers;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.example.iotserver.services.BuildingService;
@@ -20,10 +22,11 @@ public class BuildingController {
         return buildingService.getAllBuildings();
     }
 
-    // POST: Create a new building
+
     @PostMapping
-    public Building createBuilding(@RequestBody Building building) {
-        return buildingService.createBuilding(building);
+    public ResponseEntity<Building> createBuilding(@RequestBody Building building) {
+        Building savedBuilding = buildingService.createBuilding(building);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedBuilding);
     }
 
     // PUT: Update an existing building

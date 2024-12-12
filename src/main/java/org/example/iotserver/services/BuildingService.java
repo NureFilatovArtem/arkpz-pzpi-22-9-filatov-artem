@@ -20,12 +20,17 @@ public class BuildingService {
         return buildingRepository.findAll();
     }
 
-    // Create a new building
     public Building createBuilding(Building building) {
-        // Save the building and return the saved entity
+        // Ensure all mandatory fields are validated
+        if (building.getName() == null || building.getName().isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        if (building.getAddress() == null || building.getAddress().isEmpty()) {
+            throw new IllegalArgumentException("Address cannot be null or empty");
+        }
+
         return buildingRepository.save(building);
     }
-
 
     public Building updateBuilding(Long id, Building updatedBuilding) {
         // Check if the building exists
