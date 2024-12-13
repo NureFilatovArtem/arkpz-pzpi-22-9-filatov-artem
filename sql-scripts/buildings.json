@@ -1,0 +1,43 @@
+[
+    {
+      "name": "Amazon Headquarters",
+      "address": "123 Main St, Cityville"
+    },
+    {
+      "name": "PrivatBank Central",
+      "address": "456 Side Rd, Townsville"
+    },
+    {
+      "name": "Avrora Shopping Mall",
+      "address": "789 High St, Villagetown"
+    },
+    {
+      "name": "SoccerGirls Sports Club",
+      "address": "1010 Elm St, Metropolis"
+    },
+    {
+      "name": "Tech Hub Tower",
+      "address": "2020 Maple St, Smallville"
+    },
+    {
+      "name": "Startup Haven",
+      "address": "3030 Oak St, Gotham"
+    },
+    {
+      "name": "Elite Business Center",
+      "address": "4040 Pine St, Star City"
+    },
+    {
+      "name": "Crystal Palace Hotel",
+      "address": "5050 Cedar St, Central City"
+    },
+    {
+      "name": "Greenfield University",
+      "address": "6060 Birch St, Coast City"
+    },
+    {
+      "name": "Aurora Luxury Apartments",
+      "address": "7070 Willow St, Keystone City"
+    }
+  ]
+  
