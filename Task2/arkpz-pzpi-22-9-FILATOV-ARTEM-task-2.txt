@@ -1,0 +1,364 @@
+МІНІСТЕРСТВО ОСВІТИ І НАУКИ УКРАЇНИ
+
+ХАРКІВСЬКИЙ НАЦІОНАЛЬНИЙ УНІВЕРСИТЕТ РАДІОЕЛЕКТРОНІКИ
+
+
+
+
+
+ЗВІТ
+з лабораторної роботи №2
+з дисципліни «Аналіз та рефакторинг програмного коду»
+Розробка проекту: “Програмна система з контролю якості різних показників у офісних приміщеннях.”
+
+
+
+
+
+
+Виконали:					        	Перевірив:
+ст. гр. ПЗПІ-22-9                                        	Сокорчук Ігор Петрович
+Філатов Артем Дмитрович
+
+
+
+Харків 2024 
+
+
+Мета роботи: Метою роботи є розробка серверної частини програмної системи, що забезпечує взаємодію з базою даних через RESTful API. Система повинна реалізовувати базові CRUD-операції (створення, читання, оновлення, видалення) для керування сутностями, а також забезпечувати надійність і ефективність обробки запитів.
+
+2.1 Розробити будову програмної системи.
+Для розробки програмної системи використано архітектуру клієнт-сервер, де серверна частина реалізована за допомогою Node.js і Express, а для взаємодії з базою даних застосовано ORM-бібліотеку Sequelize.
+Основні компоненти системи:
+Моделі:
+•	Реалізовані у вигляді класів, що відображають структуру таблиць у базі даних.
+•	Кожна модель відповідає певній сутності: будівля, офіс, сенсор, вимірювання.
+Сервіси:
+•	Логіка взаємодії з базою даних винесена в окремий рівень сервісів.
+•	Забезпечено реалізацію CRUD-операцій через моделі.
+Контролери:
+•	Відповідають за обробку HTTP-запитів.
+•	Використовують сервіси для виконання необхідних операцій із базою даних.
+Маршрути (Роутинг):
+•	Організовано маршрутизацію запитів, що відповідає RESTful-принципам.
+•	Для кожної сутності створено окремі маршрути (GET, POST, PUT, DELETE).
+База даних:
+•	Використано PostgreSQL для зберігання даних.
+•	Автоматичне створення таблиць виконано за допомогою функції sync бібліотеки Sequelize.
+Архітектурні рішення:
+Структура проекту:
+•	models/: Моделі для бази даних.
+•	services/: Логіка роботи з базою даних.
+•	controllers/: Обробка запитів і підготовка відповідей.
+•	routes/: Організація HTTP-ендпоінтів.
+•	config/: Конфігурація бази даних.
+
+
+2.2 Створити UML діаграму прецедентів для серверної частини системи.
+ 
+
+2.3 Створити ER діаграму даних.
+ 
+
+2.4 Розробити базу даних (БД) програмної системи.
+
+
+Скрипт для створення таблиць у базі даних:
+
+
+CREATE TYPE sensor_type AS ENUM (
+    'temperature',
+    'oxygen',
+    'noise',
+    'light',
+    'motion'
+);
+
+-- Define ENUM for Measurement Units
+CREATE TYPE measurement_unit AS ENUM (
+    '°C',     -- Temperature
+    'dB',     -- Noise level
+    'lux',    -- Light intensity
+    '%',      -- Oxygen level in percentage
+    'boolean' -- Motion detection
+);
+
+CREATE TABLE building (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER set_updated_at_building
+BEFORE UPDATE ON building
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE office (
+    id SERIAL PRIMARY KEY,
+    building_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    floor INT NOT NULL,
+    capacity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (building_id) REFERENCES building(id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER set_updated_at_office
+BEFORE UPDATE ON office
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE sensor (
+    id SERIAL PRIMARY KEY,
+    office_id INT NOT NULL,
+    type sensor_type NOT NULL,
+    model VARCHAR(255),
+    serial_number VARCHAR(255) UNIQUE NOT NULL,
+    installed_at DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (office_id) REFERENCES office(id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER set_updated_at_sensor
+BEFORE UPDATE ON sensor
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TABLE measurement (
+    id SERIAL PRIMARY KEY,
+    sensor_id INT NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    value DECIMAL(10, 2) NOT NULL,
+    unit measurement_unit NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sensor_id) REFERENCES sensor(id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER set_updated_at_measurement
+BEFORE UPDATE ON measurement
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+2.5 Створити діаграму структури БД.
+ 
+2.6 Розробити функції роботи з БД (ORM або CoRM тощо).
+У моєму проекті я використовував Node.js разом із фреймворком Express для розробки серверної частини. Для взаємодії з базою даних застосовувалася бібліотека Sequelize, яка є ORM (об'єктно-реляційним маппером). Нижче розписано основні компоненти проекту та як вони реалізують функціонал взаємодії з базою даних.
+1.1. Building (Будівля):
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+const Building = sequelize.define('Building', {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  address: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+}, {
+  timestamps: true,
+});
+
+module.exports = Building;
+
+1.2. Office (Офіс):
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+
+
+const Office = sequelize.define('Office', {
+  building_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  floor: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  capacity: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+}, {
+  timestamps: true,
+});
+
+module.exports = Office;
+
+1.3. Sensor (Сенсор):
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+const Sensor = sequelize.define('Sensor', {
+  office_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  type: {
+    type: DataTypes.ENUM('temperature', 'oxygen', 'noise', 'light', 'motion'),
+    allowNull: false,
+  },
+  model: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  serial_number: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  installed_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+}, {
+  timestamps: true,
+});
+module.exports = Sensor;
+1.4. Measurement (Вимірювання):
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/db');
+
+const Measurement = sequelize.define('Measurement', {
+  sensor_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  timestamp: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  value: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+  },
+  unit: {
+    type: DataTypes.ENUM('°C', 'dB', 'lux', '%', 'boolean'),
+    allowNull: false,
+  },
+}, {
+  timestamps: true,
+});
+
+module.exports = Measurement;
+
+2.7  Розробити API (REST або GraphQL, gRPC тощо) для взаємодії серверної частини з клієнтами.
+Шляхи забезпечують доступ до бази даних. Створюємо правильні шляхи до кожного Контроллеру.
+2.1. buildingRoutes:
+const express = require('express');
+const buildingController = require('../controllers/buildingController');
+const router = express.Router();
+// Get all buildings
+router.get('/buildings', buildingController.getAllBuildings);
+// Create a new building
+router.post('/buildings', buildingController.createBuilding);
+// Update a building
+router.put('/buildings/:id', buildingController.updateBuilding);
+// Delete a building
+router.delete('/buildings/:id', buildingController.deleteBuilding);
+module.exports = router;
+2.2 officeRoutes:
+const express = require('express');
+const router = express.Router();
+const officeController = require('../controllers/officeController');
+router.get('/offices', officeController.getAllOffices);
+router.post('/offices', officeController.createOffice);
+router.put('/offices/:id', officeController.updateOffice);
+router.delete('/offices/:id', officeController.deleteOffice);
+module.exports = router;
+2.3. sensorRoutes:
+const express = require('express');
+const router = express.Router();
+const sensorController = require('../controllers/sensorController');
+router.get('/sensors', sensorController.getAllSensors);
+router.post('/sensors', sensorController.createSensor);
+router.put('/sensors/:id', sensorController.updateSensor);
+router.delete('/sensors/:id', sensorController.deleteSensor);
+module.exports = router;
+2.4. measurementRoutes:
+const express = require('express');
+const router = express.Router();
+const measurementController = require('../controllers/measurementController');
+router.get('/measurements', measurementController.getAllMeasurements);
+router.post('/measurements', measurementController.createMeasurement);
+router.put('/measurements/:id', measurementController.updateMeasurement);
+router.delete('/measurements/:id', measurementController.deleteMeasurement);
+module.exports = router;
+ 
+2.8 Створити специфікацію розробленого API.
+1) HTTP Requests Buildings
+GET HTTP Request:
+Відображаємо результати з усіх табличок
+
+2) POST HTTP Request:
+Додаємо нове значення у табличку будівлі.
+{
+  "name": "Nova Poshta",
+  "address": "Khliboroba Street 54",
+  "numberOfFloors": 4,
+  "location": "Kharkiv"
+}
+
+3) PUT HTTP Request:
+/api/buildings/{id}
+Оновлюємо значення з ID = 1 у табличці . З таким тілом JSON.
+{ "name": "Updated Nova Poshta", "address": 
+"Updated Khliboroba Street 54", 
+"numberOfFloors": 5, 
+"location": "Updated Kharkiv" }
+
+4) HTTP Request(DELETE):
+ 
+Було видалено декілька колонок.
+Тепер табличка виглядає таким чином, тобто HTTP запити працюють та встановлене стабільне з’єднання з базою даних:
+ 
+
+HTTP Requests для Sensors:
+1. GET
+
+2. POST 
+
+3. PUT
+
+
+4. DELETE
+
+HTTP Requests for Measurements:
+1.	GET
+ 
+2.	POST (Measurements)
+ 
+3.	PUT (Measurements)
+
+
+
+
+4.	DELETE
+ 
+2.9 Висновок до лабораторної роботи:
+У процесі розробки серверної частини програмної системи було використано:
+•	Node.js для виконання JavaScript на сервері.
+•	Express для створення RESTful API.
+•	Sequelize як ORM для взаємодії з базою даних PostgreSQL.
+Усі запити (GET, POST, PUT, DELETE) були успішно реалізовані та перевірені через Postman. Сервер коректно обробляв запити, виконуючи:
+•	Створення нових записів у базі даних.
+•	Читання даних із бази.
+•	Оновлення існуючих записів.
+•	Видалення записів.
+Реалізація архітектури клієнт-сервер забезпечує простоту розширення системи та інтеграції з іншими сервісами.
+Проект відповідає поставленим вимогам і готовий до подальшого використання або розширення.
+
+
+Відеозапис - https://youtu.be/F3XMhJO_gjc
