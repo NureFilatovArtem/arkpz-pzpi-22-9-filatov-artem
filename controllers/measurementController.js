@@ -55,3 +55,20 @@ exports.deleteMeasurement = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Business logic of retrieving agregated data from DB
+
+const { getStatistics } = require('../services/measurementService');
+
+exports.getStatistics = async (req, res) => {
+  try {
+    const { sensorId } = req.params;
+    const stats = await getStatistics(sensorId);
+    res.status(200).json(stats);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+
+
