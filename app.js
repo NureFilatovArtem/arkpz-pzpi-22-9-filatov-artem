@@ -1,9 +1,11 @@
+require('dotenv').config(); // Подключение переменных окружения
 const express = require('express');
 const buildingRoutes = require('./routes/buildingRoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
 const measurementRoutes = require('./routes/measurementRoutes');
 const officeRoutes = require('./routes/officeRoutes');
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes'); 
 
 const app = express();
 
@@ -17,7 +19,9 @@ app.use('/api', officeRoutes);
 app.use('/api', measurementRoutes);
 
 
-
+// Маршруты
+app.use('/api/users', userRoutes); // Обрабатывает маршруты для пользователей
+app.use('/api', authRoutes); // Обрабатывает логин (POST /api/login)
 
 // Business Logic
 
