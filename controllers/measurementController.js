@@ -1,5 +1,6 @@
 const measurementService = require('../services/measurementService');
 const Sensor = require('../models/Sensor');
+const { getStatistics } = require('../services/measurementService');
 
 // Fetch all measurements
 exports.getAllMeasurements = async (req, res) => {
@@ -58,7 +59,7 @@ exports.deleteMeasurement = async (req, res) => {
 
 // Business logic of retrieving agregated data from DB
 
-const { getStatistics } = require('../services/measurementService');
+
 
 exports.getStatistics = async (req, res) => {
   try {

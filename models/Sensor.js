@@ -23,8 +23,9 @@ const Sensor = sequelize.define('Sensor', {
     type: DataTypes.DATE,
     allowNull: true,
   },
-}, {
-  timestamps: true,
+},  {
+  tableName: 'sensors', // Указываем имя таблицы в нижнем регистре
+  timestamps: false,      // Отключаем автоматические timestamps
 });
 
 module.exports = Sensor;

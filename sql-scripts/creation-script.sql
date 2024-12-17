@@ -1,88 +1,75 @@
--- Define ENUM for Sensor Types
-CREATE TYPE sensor_type AS ENUM (
-    'temperature',
-    'oxygen',
-    'noise',
-    'light',
-    'motion'
-);
+DROP TABLE IF EXISTS administrators CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS measurements CASCADE;
+DROP TABLE IF EXISTS sensors CASCADE;
+DROP TABLE IF EXISTS offices CASCADE;
+DROP TABLE IF EXISTS buildings CASCADE;
+DROP TABLE IF EXISTS logs CASCADE;
 
--- Define ENUM for Measurement Units
-CREATE TYPE measurement_unit AS ENUM (
-    '°C',     -- Temperature
-    'dB',     -- Noise level
-    'lux',    -- Light intensity
-    '%',      -- Oxygen level in percentage
-    'boolean' -- Motion detection
-);
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS sensor_type CASCADE;
+DROP TYPE IF EXISTS measurement_unit CASCADE;
 
+-- Create ENUM types
+CREATE TYPE user_role AS ENUM ('user', 'admin');
+CREATE TYPE sensor_type AS ENUM ('temperature', 'oxygen', 'noise', 'light', 'motion');
+CREATE TYPE measurement_unit AS ENUM ('°C', 'dB', 'lux', '%', 'boolean');
 
---creating building table
-
-CREATE TABLE building (
+-- Create buildings
+CREATE TABLE IF NOT EXISTS buildings (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    address TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    address TEXT NOT NULL
 );
 
-CREATE TRIGGER set_updated_at_building
-BEFORE UPDATE ON building
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-
-
---office table
-
-CREATE TABLE office (
+-- Create offices
+CREATE TABLE IF NOT EXISTS offices (
     id SERIAL PRIMARY KEY,
-    building_id INT NOT NULL,
+    building_id INT REFERENCES buildings(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     floor INT NOT NULL,
-    capacity INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (building_id) REFERENCES building(id) ON DELETE CASCADE
+    capacity INT NOT NULL
 );
 
-CREATE TRIGGER set_updated_at_office
-BEFORE UPDATE ON office
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-
-
-CREATE TABLE sensor (
+-- Create sensors table
+CREATE TABLE IF NOT EXISTS sensors (
     id SERIAL PRIMARY KEY,
-    office_id INT NOT NULL,
+    office_id INT REFERENCES offices(id) ON DELETE CASCADE,
     type sensor_type NOT NULL,
     model VARCHAR(255),
     serial_number VARCHAR(255) UNIQUE NOT NULL,
-    installed_at DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (office_id) REFERENCES office(id) ON DELETE CASCADE
+    installed_at DATE -- Добавляем эту колонку
 );
 
-CREATE TRIGGER set_updated_at_sensor
-BEFORE UPDATE ON sensor
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-
-
-CREATE TABLE measurement (
+-- Create measurements
+CREATE TABLE IF NOT EXISTS measurements (
     id SERIAL PRIMARY KEY,
-    sensor_id INT NOT NULL,
+    sensor_id INT REFERENCES sensors(id) ON DELETE CASCADE,
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     value DECIMAL(10, 2) NOT NULL,
-    unit measurement_unit NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sensor_id) REFERENCES sensor(id) ON DELETE CASCADE
+    unit measurement_unit NOT NULL
 );
 
-CREATE TRIGGER set_updated_at_measurement
-BEFORE UPDATE ON measurement
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
+-- Create users
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role user_role DEFAULT 'user' NOT NULL
+);
 
+-- Create administrators
+CREATE TABLE IF NOT EXISTS administrators (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    privileges TEXT
+);
+
+CREATE TABLE IF NOT EXISTS logs (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    action VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -25,7 +25,8 @@ const User = sequelize.define('User', {
     defaultValue: 'user',
   },
 }, {
-  timestamps: true,
+  tableName: 'users', // Явно указываем имя таблицы в нижнем регистре
+  timestamps: false,
 });
 
 module.exports = User;

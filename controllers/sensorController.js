@@ -1,6 +1,7 @@
 const sensorService = require('../services/sensorService');
 const Office = require('../models/Office'); // you need to solve that, honey
-
+const { Measurement } = require('../models/Measurement');
+const { Sequelize } = require('sequelize'); 
 
 // Fetch all sensors
 exports.getAllSensors = async (req, res) => {
@@ -53,5 +54,22 @@ exports.deleteSensor = async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Fetch sensor statistics (NEW FUNCTION)
+exports.getSensorStats = async (req, res) => {
+  try {
+    const stats = await Measurement.findAll({
+      attributes: [
+        'sensor_id',
+        [Sequelize.fn('AVG', Sequelize.col('value')), 'average_value'],
+        [Sequelize.fn('MAX', Sequelize.col('value')), 'max_value'],
+      ],
+      group: ['sensor_id'],
+    });
+    res.status(200).json(stats);
+  } catch (error) {
+    res.status(500).json({ message: 'Error calculating stats.', error: error.message });
   }
 };

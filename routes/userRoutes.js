@@ -4,7 +4,10 @@ const { isAdmin } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.get('/', getAllUsers);
-router.delete('/:userId', isAdmin, deleteUser);
+// router.get('/', getAllUsers);
+// router.delete('/:userId', isAdmin, deleteUser);
+
+router.get('/', isAdmin, getAllUsers); // Проверка роли на GET всех юзеров
+router.delete('/:userId', isAdmin, deleteUser); // Проверка роли на DELETE пользователя
 
 module.exports = router;

@@ -19,7 +19,8 @@ const Measurement = sequelize.define('Measurement', {
     allowNull: false,
   },
 }, {
-  timestamps: true,
+  tableName: 'measurements', // Указываем имя таблицы в нижнем регистре
+  timestamps: false,      // Отключаем автоматические timestamps
 });
 
 module.exports = Measurement;

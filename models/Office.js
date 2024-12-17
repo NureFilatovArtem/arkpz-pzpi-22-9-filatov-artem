@@ -20,8 +20,9 @@ const Office = sequelize.define('Office', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-}, {
-  timestamps: true,
+},  {
+  tableName: 'offices', // Указываем имя таблицы в нижнем регистре
+  timestamps: false,      // Отключаем автоматические timestamps
 });
 
 module.exports = Office;

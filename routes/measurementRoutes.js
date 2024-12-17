@@ -11,7 +11,7 @@ router.put('/measurements/:id', measurementController.updateMeasurement);
 
 router.delete('/measurements/:id', measurementController.deleteMeasurement);
 
-router.get('/statistics/:sensorId', getStatistics);
+router.get('/statistics/:sensorId', measurementController.getStatistics);
 
 
 module.exports = router;

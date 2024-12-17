@@ -2,17 +2,19 @@
 const userService = require('../services/userService');
 
 exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await userService.getAll();
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'No users found.' });
+    try {
+      console.log('Fetching all users...'); // Добавлено для проверки
+      const users = await userService.getAll();
+      console.log('Users:', users); // Логируем результат
+      if (users.length === 0) {
+        return res.status(404).json({ message: 'No users found.' });
+      }
+      res.status(200).json({ message: 'Users retrieved successfully.', data: users });
+    } catch (error) {
+      console.error('Error fetching users:', error.message);
+      res.status(500).json({ message: 'Failed to fetch users. Please try again later.', error: error.message });
     }
-    res.status(200).json({ message: 'Users retrieved successfully.', data: users });
-  } catch (error) {
-    console.error('Error fetching users:', error.message);
-    res.status(500).json({ message: 'Failed to fetch users. Please try again later.', error: error.message });
-  }
-};
+  };
 
 exports.deleteUser = async (req, res) => {
   try {
