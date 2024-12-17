@@ -19,7 +19,7 @@ app.use('/api', officeRoutes);
 app.use('/api', measurementRoutes);
 
 
-// Маршруты
+// Маршрути
 app.use('/api/users', userRoutes); // Обрабатывает маршруты для пользователей
 app.use('/api', authRoutes); // Обрабатывает логин (POST /api/login)
 

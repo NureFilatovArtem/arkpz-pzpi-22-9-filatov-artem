@@ -2,15 +2,18 @@ const jwt = require('jsonwebtoken');
 
 // Middleware для проверки токена
 function authenticateToken(req, res, next) {
-  const token = req.headers['authorization']; // Токен должен быть в заголовке Authorization
+  const authHeader = req.headers['authorization']; // Извлекаем заголовок Authorization
 
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No token provided or invalid format' });
   }
 
+  const token = authHeader.split(' ')[1]; // Получаем сам токен (после "Bearer")
+
   // Проверяем токен
-  jwt.verify(token.split(' ')[1], 'secretkey', (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET || 'secretkey', (err, decoded) => {
     if (err) {
+      console.error('JWT verification error:', err.message);
       return res.status(403).json({ message: 'Invalid or expired token' });
     }
     req.user = decoded; // Добавляем расшифрованные данные в req.user

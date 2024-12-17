@@ -4,29 +4,35 @@ const User = require('../models/User'); // Модель пользователя
 // Логин и генерация токена
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-console.log('Checking user with:', email, password);
-console.log('User found:', user);
+    // Лог для отладки
+    console.log('Incoming login request:', email, password);
 
-    // Находим пользователя по username и password
-    const user = await User.findOne({ where: { username, password } });
+    // Проверка на наличие email и password
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
 
-    if (!user) {
+    // Поиск пользователя по email
+    const user = await User.findOne({ where: { email } });
+
+    console.log('User found:', user);
+
+    if (!user || user.password !== password) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Логін з JWT ключем з файлику .env
-
+    // Генерация JWT токена
     const token = jwt.sign(
-        { id: user.id, role: user.role }, 
-        process.env.JWT_SECRET, // Используем секретный ключ из .env
-        { expiresIn: '1h' }
-      );
-
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET || 'secretkey', // Дефолтный ключ при отсутствии .env
+      { expiresIn: '1h' }
+    );
 
     res.status(200).json({ message: 'Login successful', token });
   } catch (error) {
+    console.error('Error during login:', error);
     res.status(500).json({ message: 'Login failed', error: error.message });
   }
 };
