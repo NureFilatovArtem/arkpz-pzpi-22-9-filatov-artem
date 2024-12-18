@@ -7,7 +7,14 @@ const router = express.Router();
 // router.get('/', getAllUsers);
 // router.delete('/:userId', isAdmin, deleteUser);
 
+
+// Маршрут для получения всех пользователей (только для администраторов)
 router.get('/', authenticateToken, isAdmin, getAllUsers);
-router.delete('/:userId', isAdmin, deleteUser); // Проверка роли на DELETE пользователя
+
+// Маршрут для удаления пользователя (только для администраторов)
+router.delete('/:userId', authenticateToken, isAdmin, deleteUser);
+
+// router.get('/', authenticateToken, isAdmin, getAllUsers);
+// router.delete('/:userId', isAdmin, deleteUser); // Проверка роли на DELETE пользователя
 
 module.exports = router;
