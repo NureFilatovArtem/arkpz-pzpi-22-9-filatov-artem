@@ -75,3 +75,11 @@ VALUES
     (3, 'UPDATE_MEASUREMENT', 'Measurement ID 5 updated by User ID 3.', NOW()),
     (1, 'DELETE_OFFICE', 'Office ID 3 deleted by Admin ID 1.', NOW());
     
+    INSERT INTO subscription (sensor_id, url, created_at, updated_at)
+VALUES
+    (1, 'http://example.com/notify1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (2, 'http://example.com/notify2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (3, 'http://example.com/notify3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (4, 'http://example.com/notify4', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (5, 'http://example.com/notify5', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT DO NOTHING;

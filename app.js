@@ -6,6 +6,7 @@ const measurementRoutes = require('./routes/measurementRoutes');
 const officeRoutes = require('./routes/officeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes'); 
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
 
@@ -17,6 +18,10 @@ app.use('/api', buildingRoutes);
 app.use('/api', sensorRoutes);
 app.use('/api', officeRoutes);
 app.use('/api', measurementRoutes);
+
+
+// Subscriptions
+app.use('/api', subscriptionRoutes);
 
 
 // Маршрути
