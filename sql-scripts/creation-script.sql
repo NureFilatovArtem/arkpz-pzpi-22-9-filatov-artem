@@ -94,22 +94,20 @@ FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 
-CREATE TABLE subscriptions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id SERIAL PRIMARY KEY,
     sensor_id INT NOT NULL,
     callback_url VARCHAR(255) NOT NULL,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (sensor_id) REFERENCES Sensors(id) ON DELETE CASCADE
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sensor_id) REFERENCES sensors(id) ON DELETE CASCADE
 );
 
-
--- Создаем триггер для автоматического обновления поля updated_at
+-- Create trigger for automatic updated_at column update
 CREATE TRIGGER set_updated_at_subscription
-BEFORE UPDATE ON subscription
+BEFORE UPDATE ON subscriptions
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
-
 
 
 

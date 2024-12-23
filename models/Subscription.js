@@ -6,7 +6,7 @@ const Subscription = db.define('Subscription', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Sensors', // название таблицы сенсоров
+      model: 'sensor', // Matches database table name
       key: 'id',
     },
     onDelete: 'CASCADE',
@@ -15,9 +15,13 @@ const Subscription = db.define('Subscription', {
     type: DataTypes.STRING,
     allowNull: false,
     validate: {
-      isUrl: true, // Проверка, что это корректный URL
+      isUrl: true,
     },
   },
+}, {
+  tableName: 'subscriptions', // Explicitly set table name
+  timestamps: true, // Automatically manage createdAt and updatedAt
 });
+
 
 module.exports = Subscription;

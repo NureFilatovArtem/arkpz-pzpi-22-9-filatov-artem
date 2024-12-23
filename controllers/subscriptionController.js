@@ -1,4 +1,3 @@
-// controllers/subscriptionController.js
 const Subscription = require('../models/Subscription');
 
 // Создать подписку
