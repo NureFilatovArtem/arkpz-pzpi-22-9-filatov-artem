@@ -29,7 +29,7 @@ app.use('/api/users', userRoutes); // Обрабатывает маршруты 
 app.use('/api', authRoutes); // Обрабатывает логин (POST /api/login)
 
 // Business Logic
-
+app.use('/api', subscriptionRoutes);
 app.use('/api/users', userRoutes);
 
 // Server

@@ -1,20 +1,23 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const db = require('../config/db'); // подключение базы данных
 
-const Subscription = sequelize.define('Subscription', {
+const Subscription = db.define('Subscription', {
   sensor_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: { model: 'sensors', key: 'id' },
+    references: {
+      model: 'Sensors', // название таблицы сенсоров
+      key: 'id',
+    },
+    onDelete: 'CASCADE',
   },
-  url: {
+  callback_url: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: { isUrl: true },
+    validate: {
+      isUrl: true, // Проверка, что это корректный URL
+    },
   },
-}, {
-  timestamps: true,
-  tableName: 'subscription',
 });
 
 module.exports = Subscription;
