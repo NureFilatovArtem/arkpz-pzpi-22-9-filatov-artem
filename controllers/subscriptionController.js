@@ -28,6 +28,30 @@ exports.getAllSubscriptions = async (req, res) => {
   }
 };
 
+// We could retrieve Subscription with specific Sensor ID :)
+
+exports.getSubscriptionsBySensorId = async (req, res) => {
+  const { sensor_id } = req.params;
+  try {
+      const subscriptions = await Subscription.findAll({
+          where: { sensor_id },
+          attributes: ['callback_url'], // Only fetch callback_url
+      });
+
+      if (subscriptions.length === 0) {
+          return res.status(404).json({ message: `No subscriptions found for sensor ID ${sensor_id}` });
+      }
+
+      // Map to a flat array of callback URLs
+      const callbackUrls = subscriptions.map(subscription => subscription.callback_url);
+      res.status(200).json(callbackUrls);
+  } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+      res.status(500).json({ error: 'Failed to fetch subscriptions for the sensor' });
+  }
+};
+
+
 // Удалить подписку
 exports.deleteSubscription = async (req, res) => {
   try {

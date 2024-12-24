@@ -1,3 +1,4 @@
+const db = require('./config/db'); 
 require('dotenv').config(); // Подключение переменных окружения
 const express = require('express');
 const buildingRoutes = require('./routes/buildingRoutes');
@@ -10,6 +11,20 @@ const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 const app = express();
 
+// Синхронизация базы данных
+(async () => {
+  try {
+    await db.sync(); // Создает таблицы, если их нет
+    console.log('Database synchronized successfully!');
+  } catch (error) {
+    console.error('Error synchronizing the database:', error);
+  }
+})();
+
+const Sensor = require('./models/Sensor');
+const Subscription = require('./models/Subscription');
+
+
 // Middleware
 app.use(express.json()); // Parse JSON bodies
 
@@ -18,19 +33,11 @@ app.use('/api', buildingRoutes);
 app.use('/api', sensorRoutes);
 app.use('/api', officeRoutes);
 app.use('/api', measurementRoutes);
-
-
-// Subscriptions
-app.use('/api', subscriptionRoutes);
-
-
-// Маршрути
-app.use('/api/users', userRoutes); // Обрабатывает маршруты для пользователей
 app.use('/api', authRoutes); // Обрабатывает логин (POST /api/login)
-
-// Business Logic
-app.use('/api', subscriptionRoutes);
+app.use('/api', subscriptionRoutes); // Subscriptions
 app.use('/api/users', userRoutes);
+
+
 
 // Server
 const PORT = process.env.PORT || 3000;

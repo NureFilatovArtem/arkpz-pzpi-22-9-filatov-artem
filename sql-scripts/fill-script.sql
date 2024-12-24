@@ -76,15 +76,63 @@ VALUES
     (3, 'UPDATE_MEASUREMENT', 'Measurement ID 5 updated by User ID 3.', NOW()),
     (1, 'DELETE_OFFICE', 'Office ID 3 deleted by Admin ID 1.', NOW());
     
-   INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
-VALUES
-    (1, 'http://example.com/notify1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (2, 'http://example.com/notify2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (3, 'http://example.com/notify3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (4, 'http://example.com/notify4', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    (5, 'http://example.com/notify5', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-ON CONFLICT DO NOTHING;
+--    INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
+-- VALUES
+--     (1, 'http://example.com/notify1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+--     (2, 'http://example.com/notify2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+--     (3, 'http://example.com/notify3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+--     (4, 'http://example.com/notify4', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+--     (5, 'http://example.com/notify5', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 
+
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM subscriptions
+        WHERE sensor_id = 1 AND callback_url = 'http://example.com/notify1'
+    ) THEN
+        INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
+        VALUES (1, 'http://example.com/notify1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM subscriptions
+        WHERE sensor_id = 2 AND callback_url = 'http://example.com/notify2'
+    ) THEN
+        INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
+        VALUES (2, 'http://example.com/notify2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM subscriptions
+        WHERE sensor_id = 3 AND callback_url = 'http://example.com/notify3'
+    ) THEN
+        INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
+        VALUES (3, 'http://example.com/notify3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM subscriptions
+        WHERE sensor_id = 4 AND callback_url = 'http://example.com/notify4'
+    ) THEN
+        INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
+        VALUES (4, 'http://example.com/notify4', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM subscriptions
+        WHERE sensor_id = 5 AND callback_url = 'http://example.com/notify5'
+    ) THEN
+        INSERT INTO subscriptions (sensor_id, callback_url, createdAt, updatedAt)
+        VALUES (5, 'http://example.com/notify5', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    END IF;
+END $$;
 
 
 
