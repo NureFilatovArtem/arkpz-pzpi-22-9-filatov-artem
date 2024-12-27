@@ -5,6 +5,7 @@ const path = require('path');
 // Database connection settings
 const sequelize = new Sequelize('postgres', 'postgres', 'Student_1234', {
   host: 'localhost',
+  port: 5432,
   dialect: 'postgres',
 });
 

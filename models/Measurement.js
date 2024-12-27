@@ -8,7 +8,7 @@ const Measurement = sequelize.define('Measurement', {
   },
   timestamp: {
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
     defaultValue: DataTypes.NOW,
   },
   value: {
