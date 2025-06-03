@@ -29,3 +29,5 @@ Error creating measurement: WHERE parameter "id" has invalid "undefined" value
 Error creating measurement: WHERE parameter "id" has invalid "undefined" value
 Measurement created: Sensor 3, Value: 1900.00, Unit: lux, Timestamp: 2024-12-27T01:26:38.834Z
 Failed to notify http://example.com/notify3: Request failed with status code 404
+Measurement created: Sensor 4, Value: 28.50, Unit: °C, Timestamp: 2024-12-27T16:56:11.448Z
+Failed to notify http://example.com/notify4: Request failed with status code 404
