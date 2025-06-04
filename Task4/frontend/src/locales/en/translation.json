@@ -32,5 +32,18 @@
   "adminSidebar.dataManagement": "Data Management",
   "adminSidebar.settings": "Settings",
   "adminSidebar.logout": "Logout",
-  "adminSidebar.login": "Login"
+  "adminSidebar.login": "Login",
+  "userManagement.title": "User Management",
+  "userManagement.addUser": "Add New User",
+  "userManagement.table.id": "ID",
+  "userManagement.table.username": "Username",
+  "userManagement.table.email": "Email",
+  "userManagement.table.role": "Role",
+  "userManagement.table.actions": "Actions",
+  "userManagement.actions.edit": "Edit",
+  "userManagement.actions.delete": "Delete",
+  "userManagement.noUsers": "No users found.",
+  "roles.admin": "Administrator",
+  "roles.user": "User",
+  "roles.editor": "Editor"
 }

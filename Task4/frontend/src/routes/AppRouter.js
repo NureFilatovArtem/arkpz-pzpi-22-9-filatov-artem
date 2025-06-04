@@ -1,54 +1,66 @@
+// src/routes/AppRouter.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import MainLayout from '../components/layout/MainLayout';
-import LoginPage from '../pages/LoginPage';
-import HomePage from '../pages/HomePage'; // Ви мали цей компонент
-import UserDashboardPage from '../pages/UserDashboardPage'; // Ви мали цей
-import AdminDashboardPage from '../pages/Admin/AdminDashboardPage'; // Ви мали цей
-import AdminLayout from '../components/admin/layout/AdminLayout';
-// Додайте UserManagementPage etc. сюди пізніше
-// import UserManagementPage from '../pages/Admin/UserManagementPage';
 
+// Лейаути
+import MainLayout from '../components/layout/MainLayout';
+import AdminLayout from '../components/admin/layout/AdminLayout'; // Імпортуємо AdminLayout
+
+// Сторінки
+import LoginPage from '../pages/LoginPage';
+import HomePage from '../pages/HomePage';
+import UserDashboardPage from '../pages/UserDashboardPage';
+import AdminDashboardPage from '../pages/Admin/AdminDashboardPage';
+import UserManagementPage from '../pages/Admin/UserManagementPage'; // Імпортуємо сторінку керування користувачами
+
+// Допоміжні компоненти та хуки
 import ProtectedRoute from './ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 
 
 const AppRouter = () => {
-  const { isAuthenticated, isLoading } = useAuth(); // To handle redirection if already logged in
+  const { isAuthenticated, user, isLoading } = useAuth(); // `user` для fallback роута
 
   if (isLoading) {
-    return <div>App is loading...</div>; // Or a more sophisticated loader
+    return <div>App is loading...</div>;
   }
 
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Routes accessible to everyone, possibly wrapped in MainLayout if needed */}
-      {/* Let's make HomePage a public landing page */}
+      {/* Публічні роути, наприклад, головна сторінка, огортаються в MainLayout */}
       <Route element={<MainLayout />}>
-        <Route path="/" element={<HomePage />} /> {/* Landing Page, for example */}
+        <Route path="/" element={<HomePage />} />
       </Route>
 
-      {/* Protected User Routes */}
-      <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}> {/* Admins can also see user page */}
+      {/* Захищені роути для користувачів (і адмінів), огортаються в MainLayout */}
+      <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
         <Route element={<MainLayout />}>
           <Route path="/user" element={<UserDashboardPage />} />
-          {/* Add more user-specific routes here */}
+          {/* Сюди можна додати більше роутів для користувача */}
         </Route>
       </Route>
 
-      {/* Protected Admin Routes */}
+      {/* Захищені роути для адмінів, огортаються в AdminLayout */}
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-        <Route element={<MainLayout />}>
+        <Route element={<AdminLayout />}> {/* <--- ОСЬ ТУТ ВИКОРИСТОВУЄМО AdminLayout */}
           <Route path="/admin" element={<AdminDashboardPage />} />
-          {/* <Route path="/admin/users" element={<UserManagementPage />} /> */}
-          {/* Add more admin-specific routes here */}
+          <Route path="/admin/users" element={<UserManagementPage />} /> {/* <--- ДОДАЄМО РОУТ ДЛЯ УПРАВЛІННЯ КОРИСТОВАЧАМИ */}
+          {/* Сюди можна додати більше роутів для адміна (напр. /admin/data) */}
         </Route>
       </Route>
 
-      {/* Fallback route for non-matching paths */}
-      <Route path="*" element={<Navigate to={isAuthenticated ? (localStorage.getItem('iotUser') && JSON.parse(localStorage.getItem('iotUser')).role === 'admin' ? '/admin' : '/user') : "/login"} replace />} />
+      {/* Fallback роут: перенаправлення на відповідний дашборд, якщо залогінений, або на логін */}
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to={isAuthenticated ? (user?.role === 'admin' ? '/admin' : '/user') : "/login"}
+            replace
+          />
+        }
+      />
     </Routes>
   );
 };

@@ -32,5 +32,18 @@
   "adminSidebar.dataManagement": "Управління даними",
   "adminSidebar.settings": "Налаштування",
   "adminSidebar.logout": "Вийти",
-  "adminSidebar.login": "Увійти"
+  "adminSidebar.login": "Увійти",
+  "userManagement.title": "Управління Користувачами",
+  "userManagement.addUser": "Додати Нового Користувача",
+  "userManagement.table.id": "ID",
+  "userManagement.table.username": "Ім'я користувача",
+  "userManagement.table.email": "Електронна пошта",
+  "userManagement.table.role": "Роль",
+  "userManagement.table.actions": "Дії",
+  "userManagement.actions.edit": "Редагувати",
+  "userManagement.actions.delete": "Видалити",
+  "userManagement.noUsers": "Користувачів не знайдено.",
+  "roles.admin": "Адміністратор",
+  "roles.user": "Користувач",
+  "roles.editor": "Редактор"
 }
