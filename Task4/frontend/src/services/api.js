@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3000/api', // Подстрой под свой backend
+  baseURL: '/', // Use relative paths for proxy to work
   withCredentials: false, // true если нужен cookie
 });
 
