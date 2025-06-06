@@ -1,6 +1,7 @@
 // app.js (бекенд)
 require('dotenv').config(); // Має бути на самому початку
 const express = require('express');
+const cors = require('cors');
 
 // 1. ТІЛЬКИ 'config/db.js' імпортується на верхньому рівні для доступу до initializeDatabase
 const { initializeDatabase, sequelize } = require('./config/db'); // Також імпортуємо sequelize для логування тут
@@ -8,6 +9,16 @@ console.log('[app.js] db module imported. Sequelize instance type:', typeof sequ
 
 // Створення екземпляру Express додатка
 const app = express();
+
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  // credentials: true, // Uncomment if you use cookies/sessions
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle pre-flight requests for all routes
 
 // Middleware для парсингу JSON тіл запитів
 app.use(express.json()); 

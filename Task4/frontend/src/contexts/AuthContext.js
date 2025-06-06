@@ -1,6 +1,7 @@
 // src/contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { login as loginApi, logout as logoutApi } from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -18,37 +19,24 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (username, password) => {
-    // --- MOCK AUTHENTICATION ---
-    // In a real app, this would be an API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (username === 'admin' && password === 'admin') {
-          const userData = { username: 'admin', role: 'admin' };
-          localStorage.setItem('iotUser', JSON.stringify(userData));
-          setUser(userData);
-          resolve(userData);
-        } else if (username === 'user' && password === 'user') {
-          const userData = { username: 'user', role: 'user' };
-          localStorage.setItem('iotUser', JSON.stringify(userData));
-          setUser(userData);
-          resolve(userData);
-        } else {
-          reject(new Error('Invalid credentials'));
-        }
-      }, 500); // Simulate network delay
-    });
+  const login = async ({ email, password }) => {
+    const userFromApi = await loginApi({ email, password });
+    setUser(userFromApi);
+    localStorage.setItem('iotUser', JSON.stringify(userFromApi));
+    return userFromApi;
   };
 
   const logout = () => {
-    localStorage.removeItem('iotUser');
+    logoutApi();
     setUser(null);
+    localStorage.removeItem('iotUser');
     navigate('/login', { replace: true }); // Redirect to login after logout
   };
 
   // Value provided to child components
   const value = {
     user,
+    setUser,
     isAuthenticated: !!user, // True if user object exists
     isAdmin: user?.role === 'admin',
     login,

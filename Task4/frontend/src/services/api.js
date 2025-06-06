@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/', // Use relative paths for proxy to work
+  baseURL: 'http://localhost:5000', // Direct backend URL
   withCredentials: false, // JWT is sent in header, not cookies
 });
 

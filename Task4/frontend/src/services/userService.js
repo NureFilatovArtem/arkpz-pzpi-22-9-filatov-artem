@@ -4,10 +4,9 @@ import api from './api';
 export const fetchUsers = async () => {
   try {
     const response = await api.get('/api/users/');
-    // If backend returns array directly in response.data
     return response.data;
   } catch (error) {
-    console.error("Fetch users API error:", error.response ? error.response.data : error.message);
+    console.error('Fetch users API error:', error.response ? error.response.data : error.message);
     throw error;
   }
 };
@@ -18,14 +17,13 @@ export const createUser = async (userData) => {
     const response = await api.post('/api/users/', userData);
     return response.data;
   } catch (error) {
-    console.error("Create user API error:", error.response ? error.response.data : error.message);
+    console.error('Create user API error:', error.response ? error.response.data : error.message);
     throw error;
   }
 };
 
 // PUT /api/users/:userId
 export const updateUser = async (userId, userData) => {
-  // Stub for now
   try {
     const response = await api.put(`/api/users/${userId}`, userData);
     return response.data;
@@ -36,7 +34,6 @@ export const updateUser = async (userId, userData) => {
 
 // DELETE /api/users/:userId
 export const deleteUser = async (userId) => {
-  // Stub for now
   try {
     const response = await api.delete(`/api/users/${userId}`);
     return response.data;

@@ -1,20 +1,15 @@
 const express = require('express');
-const { getAllUsers, deleteUser } = require('../controllers/userController');
+const userController = require('../controllers/userController');
 const { authenticateToken, isAdmin } = require('../middlewares/authMiddleware');
-
 const router = express.Router();
 
-// router.get('/', getAllUsers);
-// router.delete('/:userId', isAdmin, deleteUser);
-
-
 // Маршрут для получения всех пользователей (только для администраторов)
-router.get('/', authenticateToken, isAdmin, getAllUsers);
+router.get('/', authenticateToken, isAdmin, userController.getAllUsers);
+
+// Маршрут для создания нового пользователя (только для администраторов)
+router.post('/', authenticateToken, isAdmin, userController.createUser);
 
 // Маршрут для удаления пользователя (только для администраторов)
-router.delete('/:userId', authenticateToken, isAdmin, deleteUser);
-
-// router.get('/', authenticateToken, isAdmin, getAllUsers);
-// router.delete('/:userId', isAdmin, deleteUser); // Проверка роли на DELETE пользователя
+router.delete('/:userId', authenticateToken, isAdmin, userController.deleteUser);
 
 module.exports = router;

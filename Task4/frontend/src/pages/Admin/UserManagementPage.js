@@ -30,15 +30,16 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { fetchUsers, createUser, updateUser, deleteUser, createAdmin } from '../../services/userService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const roles = [
-  { value: 'admin', labelKey: 'roles.admin' },
-  { value: 'user', labelKey: 'roles.user' },
-  { value: 'editor', labelKey: 'roles.editor' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'user', label: 'User' },
 ];
 
 const UserManagementPage = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -51,11 +52,12 @@ const UserManagementPage = () => {
   const [form, setForm] = useState({ username: '', email: '', password: '', role: 'user' });
   const [formLoading, setFormLoading] = useState(false);
 
-  // Fetch users on mount
   useEffect(() => {
-    loadUsers();
+    if (user && user.role === 'admin') {
+      loadUsers();
+    }
     // eslint-disable-next-line
-  }, []);
+  }, [user]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -70,7 +72,6 @@ const UserManagementPage = () => {
     }
   };
 
-  // Handlers for Add User/Admin
   const handleOpenAddUser = () => {
     setForm({ username: '', email: '', password: '', role: 'user' });
     setOpenAddUser(true);
@@ -111,7 +112,6 @@ const UserManagementPage = () => {
     }
   };
 
-  // Handlers for Edit
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
     setForm({ username: user.username, email: user.email, password: '', role: user.role });
@@ -133,7 +133,6 @@ const UserManagementPage = () => {
     }
   };
 
-  // Handlers for Delete
   const handleOpenDelete = (user) => {
     setSelectedUser(user);
     setOpenDelete(true);
@@ -154,7 +153,6 @@ const UserManagementPage = () => {
     }
   };
 
-  // Form change handler
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -206,7 +204,7 @@ const UserManagementPage = () => {
                   <TableCell>{user.id}</TableCell>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>{t(`roles.${user.role}`, user.role)}</TableCell>
+                  <TableCell>{user.role}</TableCell>
                   <TableCell>
                     <IconButton color="primary" onClick={() => handleOpenEdit(user)}>
                       <EditIcon />
@@ -229,7 +227,6 @@ const UserManagementPage = () => {
         </TableContainer>
       )}
 
-      {/* Add User Dialog */}
       <Dialog open={openAddUser} onClose={handleCloseAddUser} maxWidth="sm" fullWidth>
         <DialogTitle>{t('userManagement.addUser')}</DialogTitle>
         <DialogContent>
@@ -264,9 +261,16 @@ const UserManagementPage = () => {
               label={t('userManagement.table.role')}
               name="role"
               value={form.role}
-              disabled
+              onChange={handleFormChange}
+              select
               fullWidth
-            />
+            >
+              {roles.map((role) => (
+                <MenuItem key={role.value} value={role.value}>
+                  {role.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -276,7 +280,6 @@ const UserManagementPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Add Admin Dialog */}
       <Dialog open={openAddAdmin} onClose={handleCloseAddAdmin} maxWidth="sm" fullWidth>
         <DialogTitle>{t('userManagement.addAdmin', 'Add Administrator')}</DialogTitle>
         <DialogContent>
@@ -311,9 +314,16 @@ const UserManagementPage = () => {
               label={t('userManagement.table.role')}
               name="role"
               value={form.role}
-              disabled
+              onChange={handleFormChange}
+              select
               fullWidth
-            />
+            >
+              {roles.map((role) => (
+                <MenuItem key={role.value} value={role.value}>
+                  {role.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -324,7 +334,6 @@ const UserManagementPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Edit User Dialog */}
       <Dialog open={openEdit} onClose={handleCloseEdit} maxWidth="sm" fullWidth>
         <DialogTitle>{t('userManagement.actions.edit')}</DialogTitle>
         <DialogContent>
@@ -356,7 +365,7 @@ const UserManagementPage = () => {
             >
               {roles.map((role) => (
                 <MenuItem key={role.value} value={role.value}>
-                  {t(role.labelKey)}
+                  {role.label}
                 </MenuItem>
               ))}
             </TextField>
@@ -379,7 +388,6 @@ const UserManagementPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Delete User Dialog */}
       <Dialog open={openDelete} onClose={handleCloseDelete} maxWidth="xs">
         <DialogTitle>{t('userManagement.actions.delete')}</DialogTitle>
         <DialogContent>
@@ -393,13 +401,11 @@ const UserManagementPage = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for success */}
       <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert onClose={() => setSuccess('')} severity="success" sx={{ width: '100%' }}>
           {success}
         </Alert>
       </Snackbar>
-      {/* Snackbar for error */}
       <Snackbar open={!!error && !loading} autoHideDuration={4000} onClose={() => setError('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
           {error}
