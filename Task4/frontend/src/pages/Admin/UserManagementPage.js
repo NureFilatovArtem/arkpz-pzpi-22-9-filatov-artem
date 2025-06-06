@@ -29,7 +29,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { fetchUsers, createUser, updateUser, deleteUser } from '../../services/userService';
+import { fetchUsers, createUser, updateUser, deleteUser, createAdmin } from '../../services/userService';
 
 const roles = [
   { value: 'admin', labelKey: 'roles.admin' },
@@ -43,7 +43,8 @@ const UserManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [openAdd, setOpenAdd] = useState(false);
+  const [openAddUser, setOpenAddUser] = useState(false);
+  const [openAddAdmin, setOpenAddAdmin] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -69,22 +70,42 @@ const UserManagementPage = () => {
     }
   };
 
-  // Handlers for Add
-  const handleOpenAdd = () => {
+  // Handlers for Add User/Admin
+  const handleOpenAddUser = () => {
     setForm({ username: '', email: '', password: '', role: 'user' });
-    setOpenAdd(true);
+    setOpenAddUser(true);
   };
-  const handleCloseAdd = () => setOpenAdd(false);
+  const handleOpenAddAdmin = () => {
+    setForm({ username: '', email: '', password: '', role: 'admin' });
+    setOpenAddAdmin(true);
+  };
+  const handleCloseAddUser = () => setOpenAddUser(false);
+  const handleCloseAddAdmin = () => setOpenAddAdmin(false);
+
   const handleAddUser = async () => {
     setFormLoading(true);
     setError('');
     try {
       await createUser(form);
-      setSuccess(t('userManagement.addUser') + ' ' + t('userManagement.actions.edit'));
-      setOpenAdd(false);
+      setSuccess(t('userManagement.addUserSuccess', 'User added successfully.'));
+      setOpenAddUser(false);
       loadUsers();
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Failed to add user');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+  const handleAddAdmin = async () => {
+    setFormLoading(true);
+    setError('');
+    try {
+      await createAdmin(form);
+      setSuccess(t('userManagement.addAdminSuccess', 'Administrator added successfully.'));
+      setOpenAddAdmin(false);
+      loadUsers();
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Failed to add administrator');
     } finally {
       setFormLoading(false);
     }
@@ -142,15 +163,24 @@ const UserManagementPage = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>{t('userManagement.title')}</Typography>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        color="primary"
-        onClick={handleOpenAdd}
-        sx={{ mb: 2 }}
-      >
-        {t('userManagement.addUser')}
-      </Button>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          color="primary"
+          onClick={handleOpenAddUser}
+        >
+          {t('userManagement.addUser')}
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          color="secondary"
+          onClick={handleOpenAddAdmin}
+        >
+          {t('userManagement.addAdmin', 'Add Administrator')}
+        </Button>
+      </Box>
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -200,7 +230,7 @@ const UserManagementPage = () => {
       )}
 
       {/* Add User Dialog */}
-      <Dialog open={openAdd} onClose={handleCloseAdd} maxWidth="sm" fullWidth>
+      <Dialog open={openAddUser} onClose={handleCloseAddUser} maxWidth="sm" fullWidth>
         <DialogTitle>{t('userManagement.addUser')}</DialogTitle>
         <DialogContent>
           <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
@@ -222,19 +252,52 @@ const UserManagementPage = () => {
               type="email"
             />
             <TextField
+              label={t('loginPage.passwordLabel')}
+              name="password"
+              value={form.password}
+              onChange={handleFormChange}
+              required
+              fullWidth
+              type="password"
+            />
+            <TextField
               label={t('userManagement.table.role')}
               name="role"
               value={form.role}
-              onChange={handleFormChange}
-              select
+              disabled
               fullWidth
-            >
-              {roles.map((role) => (
-                <MenuItem key={role.value} value={role.value}>
-                  {t(role.labelKey)}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddUser}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
+          <Button onClick={handleAddUser} variant="contained" disabled={formLoading} color="primary">
+            {formLoading ? <CircularProgress size={24} /> : t('userManagement.addUser')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Add Admin Dialog */}
+      <Dialog open={openAddAdmin} onClose={handleCloseAddAdmin} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('userManagement.addAdmin', 'Add Administrator')}</DialogTitle>
+        <DialogContent>
+          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <TextField
+              label={t('userManagement.table.username')}
+              name="username"
+              value={form.username}
+              onChange={handleFormChange}
+              required
+              fullWidth
+            />
+            <TextField
+              label={t('userManagement.table.email')}
+              name="email"
+              value={form.email}
+              onChange={handleFormChange}
+              required
+              fullWidth
+              type="email"
+            />
             <TextField
               label={t('loginPage.passwordLabel')}
               name="password"
@@ -244,12 +307,19 @@ const UserManagementPage = () => {
               fullWidth
               type="password"
             />
+            <TextField
+              label={t('userManagement.table.role')}
+              name="role"
+              value={form.role}
+              disabled
+              fullWidth
+            />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseAdd}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
-          <Button onClick={handleAddUser} variant="contained" disabled={formLoading}>
-            {formLoading ? <CircularProgress size={24} /> : t('userManagement.addUser')}
+          <Button onClick={handleCloseAddAdmin}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
+          <Button onClick={handleAddAdmin} variant="contained" disabled={formLoading} color="secondary">
+            {formLoading ? <CircularProgress size={24} /> : t('userManagement.addAdmin', 'Add Administrator')}
           </Button>
         </DialogActions>
       </Dialog>

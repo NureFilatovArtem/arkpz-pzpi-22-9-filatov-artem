@@ -1,26 +1,30 @@
 import React from 'react';
-import Header from '../../layout/Header'; // Загальний Header
-import Footer from '../../layout/Footer'; // Загальний Footer
-import AdminSidebar from './AdminSidebar'; // Імпорт AdminSidebar з тієї ж папки
+import Header from '../../layout/Header';
+import AdminSidebar from './AdminSidebar';
 import { Outlet } from 'react-router-dom';
+import { Box, Toolbar } from '@mui/material';
 
-// Важливо: переконайтеся, що цей CSS файл існує за шляхом:
-// frontend/src/styles/components/admin/layout/AdminLayout.css
-import '../../../styles/components/layout/AdminLayout.css'; // <--- ЗМІНЕНИЙ ШЛЯХ
+const drawerWidth = 240;
 
-const AdminLayout = () => {
-  return (
-    <div className="admin-layout">
-      <Header />
-      <div className="admin-layout-content-wrapper">
-        <AdminSidebar />
-        <main className="admin-main-content">
-          <Outlet />
-        </main>
-      </div>
-      <Footer />
-    </div>
-  );
-};
+const AdminLayout = () => (
+  <Box sx={{ display: 'flex', minHeight: '100vh', background: '#f4f7f6' }}>
+    <Header />
+    <AdminSidebar />
+    <Box
+      component="main"
+      sx={{
+        flexGrow: 1,
+        p: 3,
+        ml: `${drawerWidth}px`,
+        mt: { xs: '56px', sm: '64px' },
+        background: '#f4f7f6',
+        minHeight: '100vh',
+      }}
+    >
+      <Toolbar />
+      <Outlet />
+    </Box>
+  </Box>
+);
 
 export default AdminLayout;

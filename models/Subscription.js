@@ -1,7 +1,13 @@
 const { DataTypes } = require('sequelize');
-const db = require('../config/db'); // подключение базы данных
+const dbConfig = require('../config/db');
+console.log('[models/Subscription.js] Importing sequelize. Received dbConfig.sequelize type:', typeof dbConfig.sequelize, '. Has define method:', dbConfig.sequelize ? typeof dbConfig.sequelize.define : 'undefined');
+const sequelize = dbConfig.sequelize;
+if (!sequelize || typeof sequelize.define !== 'function') {
+  console.error('[models/Subscription.js] CRITICAL ERROR: sequelize is not correctly imported or initialized!');
+  throw new Error('Sequelize instance is not available or .define is not a function in Subscription.js');
+}
 
-const Subscription = db.define('Subscriptions', {
+const Subscription = sequelize.define('Subscription', {
   sensor_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

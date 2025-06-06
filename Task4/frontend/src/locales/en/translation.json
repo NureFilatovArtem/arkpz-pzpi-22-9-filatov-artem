@@ -33,6 +33,7 @@
   "adminSidebar.settings": "Settings",
   "adminSidebar.logout": "Logout",
   "adminSidebar.login": "Login",
+  "adminSidebar.home": "Home",
   "userManagement.title": "User Management",
   "userManagement.addUser": "Add New User",
   "userManagement.editUser": "Edit User",
@@ -51,5 +52,10 @@
   "userManagement.noUsers": "No users found.",
   "roles.admin": "Administrator",
   "roles.user": "User",
-  "roles.editor": "Editor"
+  "roles.editor": "Editor",
+  "homePage.sensorStatsTitle": "Sensor Statistics / Overview",
+  "homePage.statsPlaceholder": "IoT Device and Sensor Overview Chart - Coming Soon!",
+  "userManagement.addAdmin": "Add Administrator",
+  "userManagement.addUserSuccess": "User added successfully.",
+  "userManagement.addAdminSuccess": "Administrator added successfully."
 }

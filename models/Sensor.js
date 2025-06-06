@@ -1,5 +1,11 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const dbConfig = require('../config/db');
+console.log('[models/Sensor.js] Importing sequelize. Received dbConfig.sequelize type:', typeof dbConfig.sequelize, '. Has define method:', dbConfig.sequelize ? typeof dbConfig.sequelize.define : 'undefined');
+const sequelize = dbConfig.sequelize;
+if (!sequelize || typeof sequelize.define !== 'function') {
+  console.error('[models/Sensor.js] CRITICAL ERROR: sequelize is not correctly imported or initialized!');
+  throw new Error('Sequelize instance is not available or .define is not a function in Sensor.js');
+}
 
 const Sensor = sequelize.define('Sensor', {
   office_id: {

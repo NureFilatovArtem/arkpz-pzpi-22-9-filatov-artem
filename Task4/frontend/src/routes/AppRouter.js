@@ -32,22 +32,16 @@ const AppRouter = () => {
       {/* Публічні роути, наприклад, головна сторінка, огортаються в MainLayout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
-      </Route>
-
-      {/* Захищені роути для користувачів (і адмінів), огортаються в MainLayout */}
-      <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
-        <Route element={<MainLayout />}>
+        <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
           <Route path="/user" element={<UserDashboardPage />} />
-          {/* Сюди можна додати більше роутів для користувача */}
         </Route>
       </Route>
 
       {/* Захищені роути для адмінів, огортаються в AdminLayout */}
       <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-        <Route element={<AdminLayout />}> {/* <--- ОСЬ ТУТ ВИКОРИСТОВУЄМО AdminLayout */}
+        <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/users" element={<UserManagementPage />} /> {/* <--- ДОДАЄМО РОУТ ДЛЯ УПРАВЛІННЯ КОРИСТОВАЧАМИ */}
-          {/* Сюди можна додати більше роутів для адміна (напр. /admin/data) */}
+          <Route path="/admin/users" element={<UserManagementPage />} />
         </Route>
       </Route>
 

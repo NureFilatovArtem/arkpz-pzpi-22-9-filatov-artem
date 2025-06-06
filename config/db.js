@@ -1,40 +1,37 @@
+// config/db.js
 const { Sequelize } = require('sequelize');
 const fs = require('fs');
 const path = require('path');
 
-// Database connection settings
-const sequelize = new Sequelize('postgres', 'postgres', 'Student_1234', {
-  host: 'localhost',
-  port: 5432,
+const sequelizeInstance = new Sequelize(process.env.DB_NAME || 'postgres', process.env.DB_USER || 'postgres', process.env.DB_PASSWORD || 'Student_1234', {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 5432,
   dialect: 'postgres',
+  logging: false, 
 });
+// Логування після створення екземпляру
+console.log('[config/db.js] Sequelize instance created. Type:', typeof sequelizeInstance, '. Has define method:', sequelizeInstance ? typeof sequelizeInstance.define : 'undefined');
 
-const runSQLScript = async (filePath) => {
+
+const runSQLScript = async (filePath, scriptName) => { /* ... твій код runSQLScript ... */ };
+
+const initializeDatabase = async () => {
   try {
-    const script = fs.readFileSync(filePath, 'utf-8');
-    await sequelize.query(script);
-    console.log(`Successfully executed: ${filePath}`);
+    await sequelizeInstance.authenticate(); // Використовуємо sequelizeInstance
+    console.log('[config/db.js] Database connection authenticated successfully.');
+    // ... твій код для виконання SQL скриптів з runSQLScript, використовуючи sequelizeInstance ...
+    console.log('[config/db.js] Running SQL scripts for database setup...');
+    await runSQLScript(path.join(__dirname, '../sql-scripts/creation-script.sql'), 'Creation Script');
+    await runSQLScript(path.join(__dirname, '../sql-scripts/fill-script.sql'), 'Fill Script');
+    console.log('[config/db.js] All SQL scripts executed.');
   } catch (error) {
-    console.error(`Error executing script ${filePath}:`, error);
+    console.error('[config/db.js] Critical error during database initialization:', error);
+    throw error;
   }
 };
 
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connected successfully.');
+// Логування перед експортом
+const exportsObject = { sequelize: sequelizeInstance, initializeDatabase };
+console.log('[config/db.js] Exporting object. Sequelize type in export:', typeof exportsObject.sequelize, '. Has define method:', exportsObject.sequelize ? typeof exportsObject.sequelize.define : 'undefined');
 
-   // Run creation-script.sql
-await runSQLScript(path.join(__dirname, '../sql-scripts/creation-script.sql'));
-
-// Run fill-script.sql
-await runSQLScript(path.join(__dirname, '../sql-scripts/fill-script.sql'));
-    console.log('Database setup completed.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  } finally {
-    
-  }
-})();
-
-module.exports = sequelize;
+module.exports = exportsObject;

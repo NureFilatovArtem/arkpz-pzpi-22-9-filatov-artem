@@ -1,14 +1,24 @@
 import api from './api';
 
+// credentials: { email, password }
 export const login = async (credentials) => {
-  // POST /api/login (proxied)
-  const response = await api.post('/api/login', credentials);
-  const { token, ...user } = response.data;
-  if (token) localStorage.setItem('jwtToken', token);
-  return user;
+  try {
+    // POST /api/login (proxied)
+    const response = await api.post('/api/login', credentials);
+    // Expecting: { token, user }
+    const { token, user } = response.data;
+    if (token) {
+      localStorage.setItem('jwtToken', token);
+    }
+    return user; // or return response.data if you want both
+  } catch (error) {
+    // Log for debugging
+    console.error("Login API error:", error.response ? error.response.data : error.message);
+    throw error;
+  }
 };
 
-export const logout = async () => {
+export const logout = () => {
   localStorage.removeItem('jwtToken');
 };
 
