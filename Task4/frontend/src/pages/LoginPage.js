@@ -59,7 +59,7 @@ const LoginPage = () => {
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}> {/* Використовуємо Box як form */}
           <TextField
-            label={t('loginPage.usernameLabel', 'Email')} // Змінив usernameLabel на emailLabel або просто Email
+            label={t('loginPage.emailLabel', 'Email')} // Змінив usernameLabel на emailLabel або просто Email
             value={email}
             onChange={e => setEmail(e.target.value)}
             fullWidth

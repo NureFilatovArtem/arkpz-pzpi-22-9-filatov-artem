@@ -2,17 +2,18 @@
 const express = require('express');
 const router = express.Router();
 const subscriptionController = require('../controllers/subscriptionController');
+const { authenticateToken } = require('../middlewares/authMiddleware');
 
 // Создать подписку
-router.post('/subscriptions', subscriptionController.createSubscription);
+router.post('/', authenticateToken, subscriptionController.createSubscription);
 
 // Получить все подписки
-router.get('/subscriptions', subscriptionController.getAllSubscriptions);
+router.get('/', authenticateToken, subscriptionController.getAllSubscriptions);
 
 // Specific sensor subscriptions by ID
-router.get('/subscriptions/:sensor_id', subscriptionController.getSubscriptionsBySensorId);
+router.get('/:sensor_id', authenticateToken, subscriptionController.getSubscriptionsBySensorId);
 
 // Удалить подписку
-router.delete('/subscriptions/:id', subscriptionController.deleteSubscription);
+router.delete('/:id', authenticateToken, subscriptionController.deleteSubscription);
 
 module.exports = router;

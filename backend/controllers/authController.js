@@ -40,7 +40,7 @@ return res.status(401).json({ message: 'Invalid credentials' });
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'secretkey',
-      { expiresIn: '1h' }
+      { expiresIn: '7d' }
     );
 
     const userData = { id: user.id, username: user.username, email: user.email, role: user.role };

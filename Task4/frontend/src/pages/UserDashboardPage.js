@@ -1,16 +1,23 @@
 // src/pages/UserDashboardPage.js
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Typography, Box, Paper } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 const UserDashboardPage = () => {
   const { t } = useTranslation();
-  // Припустимо, у вас є або будуть ключі для цієї сторінки
   return (
-    <div>
-      <h1>{t('userDashboard.title', 'User Dashboard')}</h1>
-      <p>{t('userDashboard.welcomeMessage', 'Welcome to your dashboard!')}</p>
-      {/* Сюди буде додаватися контент для користувача */}
-    </div>
+    <Paper elevation={3} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        {t('userDashboard.title', 'User Dashboard')}
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, color: 'text.secondary' }}>
+        <InfoOutlinedIcon sx={{ mr: 1 }} />
+        <Typography variant="body1">
+          {t('userDashboard.welcomeMessage', 'Ви можете використовувати бокові кнопочки для того, щоб знайти те, що вам потрібно.')}
+        </Typography>
+      </Box>
+    </Paper>
   );
 };
 

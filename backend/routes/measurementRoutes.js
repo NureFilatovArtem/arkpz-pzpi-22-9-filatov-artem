@@ -2,17 +2,16 @@ const express = require('express');
 const router = express.Router();
 const measurementController = require('../controllers/measurementController');
 const { getStatistics } = require('../controllers/measurementController');
+const { authenticateToken } = require('../middlewares/authMiddleware');
 
-router.get('/measurements', measurementController.getAllMeasurements);
+router.get('/', measurementController.getAllMeasurements);
 
-router.post('/measurements', measurementController.createMeasurement);
+router.post('/', authenticateToken, measurementController.createMeasurement);
 
-router.put('/measurements/:id', measurementController.updateMeasurement);
+router.put('/:id', authenticateToken, measurementController.updateMeasurement);
 
-router.delete('/measurements/:id', measurementController.deleteMeasurement);
+router.delete('/:id', authenticateToken, measurementController.deleteMeasurement);
 
 router.get('/statistics/:sensorId', measurementController.getStatistics);
-
-
 
 module.exports = router;

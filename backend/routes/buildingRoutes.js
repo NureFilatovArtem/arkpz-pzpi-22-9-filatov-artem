@@ -1,17 +1,18 @@
 const express = require('express');
 const buildingController = require('../controllers/buildingController');
+const { authenticateToken } = require('../middlewares/authMiddleware');
 const router = express.Router();
 // Get all buildings
-router.get('/buildings', buildingController.getAllBuildings);
+router.get('/', buildingController.getAllBuildings);
 
 // Create a new building
-router.post('/buildings', buildingController.createBuilding);
+router.post('/', authenticateToken, buildingController.createBuilding);
 
 // Update a building
-router.put('/buildings/:id', buildingController.updateBuilding);
+router.put('/:id', authenticateToken, buildingController.updateBuilding);
 
 // Delete a building
-router.delete('/buildings/:id', buildingController.deleteBuilding);
+router.delete('/:id', authenticateToken, buildingController.deleteBuilding);
 
 module.exports = router;
 

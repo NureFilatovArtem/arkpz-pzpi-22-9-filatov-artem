@@ -96,7 +96,6 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
     
-    // Предотвращение удаления самого себя (если ID в токене совпадает с удаляемым)
     if (req.user && req.user.id === parseInt(userId, 10)) {
         return res.status(403).json({ message: 'You cannot delete your own account.' });
     }
@@ -109,5 +108,46 @@ exports.deleteUser = async (req, res) => {
   } catch (error) {
     console.error(`[userController] Error deleting user with ID ${req.params.userId}:`, error.message);
     res.status(500).json({ message: 'An error occurred while deleting the user.', error: error.message });
+  }
+};
+
+exports.updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { username, email, role, password } = req.body;
+
+    const userToUpdate = await User.findByPk(userId);
+    if (!userToUpdate) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (username) userToUpdate.username = username;
+    if (email) userToUpdate.email = email;
+    if (role && ['user', 'admin'].includes(role.toLowerCase())) {
+        userToUpdate.role = role.toLowerCase();
+    }
+
+    if (password && password.length > 0) { // Проверка, что пароль не пустой
+      const hashedPassword = await bcrypt.hash(password, 10);
+      userToUpdate.password = hashedPassword;
+    }
+    
+    await userToUpdate.save();
+    
+    const updatedUserData = {
+      id: userToUpdate.id,
+      username: userToUpdate.username,
+      email: userToUpdate.email,
+      role: userToUpdate.role
+    };
+
+    res.status(200).json(updatedUserData);
+    
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({ message: 'Email or username already in use.' });
+    }
+    console.error(`[userController] Error updating user ${req.params.userId}:`, error);
+    res.status(500).json({ message: 'Failed to update user', error: error.message });
   }
 };
