@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const officeController = require('../backend/controllers/officeController');
+const officeController = require('../controllers/officeController');
 
 router.get('/offices', officeController.getAllOffices);
 router.post('/offices', officeController.createOffice);

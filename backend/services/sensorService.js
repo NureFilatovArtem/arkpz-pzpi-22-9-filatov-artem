@@ -1,4 +1,4 @@
-const Sensor = require('../backend/models/Sensor'); // Ensure exact match with file name and path
+const Sensor = require('../models/Sensor'); // Ensure exact match with file name and path
 
 
 // Fetch all sensors
