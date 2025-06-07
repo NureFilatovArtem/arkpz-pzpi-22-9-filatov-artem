@@ -29,12 +29,10 @@ exports.login = async (req, res) => {
     // const isMatch = await bcrypt.compare(password, user.password);
     
     // НОВЫЙ код для временной проверки:
-    const isMatch = (password === user.password);
-
-    if (!isMatch) {
-      console.log(`Login failed: Password mismatch for user ${email}.`);
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
+    const isMatch = await bcrypt.compare(password, user.password);
+if (!isMatch) {
+return res.status(401).json({ message: 'Invalid credentials' });
+}
 
     // Если проверка пройдена, генерируем токен
     console.log(`Login successful for user: ${user.username} (${user.role})`);
