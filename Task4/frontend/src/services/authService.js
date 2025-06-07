@@ -3,16 +3,11 @@ import api from './api';
 // credentials: { email, password }
 export const login = async (credentials) => {
   try {
-    // POST /api/login (proxied)
-    const response = await api.post('/api/login', credentials);
-    // Expecting: { token, user }
-    const { token, user } = response.data;
-    if (token) {
-      localStorage.setItem('jwtToken', token);
-    }
-    return user; // or return response.data if you want both
+    const response = await api.post('/api/auth/login', credentials);
+    // НЕ сохраняем токен здесь. Контекст сделает это сам.
+    // Просто возвращаем все данные.
+    return response.data; // { token, user }
   } catch (error) {
-    // Log for debugging
     console.error("Login API error:", error.response ? error.response.data : error.message);
     throw error;
   }

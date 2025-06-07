@@ -1,53 +1,65 @@
 // src/contexts/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login as loginApi, logout as logoutApi } from '../services/authService';
+// Мы больше не будем использовать logoutApi отсюда, так как очистка - это дело контекста
+import { login as loginApi } from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // user: { username: '...', role: '...' } or null
-  const [isLoading, setIsLoading] = useState(true); // To check initial auth status
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('jwtToken')); // Загружаем токен при старте
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check for saved user in localStorage on initial load
+  // Этот useEffect будет реагировать на изменение токена
   useEffect(() => {
+    // Если токен есть, мы пытаемся получить данные пользователя
     const savedUser = localStorage.getItem('iotUser');
-    if (savedUser) {
+    if (token && savedUser) {
       setUser(JSON.parse(savedUser));
+    } else {
+      setUser(null);
     }
     setIsLoading(false);
-  }, []);
+  }, [token]); // Зависимость от токена!
 
   const login = async ({ email, password }) => {
-    const userFromApi = await loginApi({ email, password });
-    setUser(userFromApi);
+    // loginApi теперь должен вернуть { user, token }
+    const { user: userFromApi, token: receivedToken } = await loginApi({ email, password });
+
+    // Сохраняем все, что нужно
+    localStorage.setItem('jwtToken', receivedToken);
     localStorage.setItem('iotUser', JSON.stringify(userFromApi));
+
+    // Обновляем состояния
+    setToken(receivedToken);
+    setUser(userFromApi);
+    
     return userFromApi;
   };
 
   const logout = () => {
-    logoutApi();
     setUser(null);
+    setToken(null);
+    localStorage.removeItem('jwtToken');
     localStorage.removeItem('iotUser');
-    navigate('/login', { replace: true }); // Redirect to login after logout
+    navigate('/login', { replace: true });
   };
 
-  // Value provided to child components
   const value = {
     user,
-    setUser,
-    isAuthenticated: !!user, // True if user object exists
+    token,
+    isAuthenticated: !!token, // <--- ИСТИНА - ЭТО НАЛИЧИЕ ТОКЕНА
     isAdmin: user?.role === 'admin',
     login,
     logout,
-    isLoading, // To handle initial loading state
+    isLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

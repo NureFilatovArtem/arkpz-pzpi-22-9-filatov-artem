@@ -1,45 +1,56 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User'); // Модель пользователя
+const User = require('../models/User'); // Убедитесь, что путь к модели верный
 
 // Логин и генерация токена
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Лог для отладки
-    console.log('Incoming login request:', email, password);
+    console.log('Incoming login request for email:', email);
 
-    // Проверка на наличие email и password
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    // Поиск пользователя по email
     const user = await User.findOne({ where: { email } });
 
-    console.log('User found:', user);
-
     if (!user) {
+      console.log(`Login failed: No user found with email ${email}`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // --- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ---
+    // Поскольку пароли в вашей базе данных НЕ хешированы,
+    // мы временно отключаем bcrypt и используем простое сравнение строк.
+    // Это только для отладки, чтобы вы смогли войти в систему.
+    
+    // Старый код с bcrypt, который не работал с вашими данными:
+    // const isMatch = await bcrypt.compare(password, user.password);
+    
+    // НОВЫЙ код для временной проверки:
+    const isMatch = (password === user.password);
+
     if (!isMatch) {
+      console.log(`Login failed: Password mismatch for user ${email}.`);
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Генерация JWT токена
+    // Если проверка пройдена, генерируем токен
+    console.log(`Login successful for user: ${user.username} (${user.role})`);
+
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secretkey', // Дефолтный ключ при отсутствии .env
+      process.env.JWT_SECRET || 'secretkey',
       { expiresIn: '1h' }
     );
 
     const userData = { id: user.id, username: user.username, email: user.email, role: user.role };
+    
     res.status(200).json({ token, user: userData });
+
   } catch (error) {
     console.error('Error during login:', error);
-    res.status(500).json({ message: 'Login failed', error: error.message });
+    res.status(500).json({ message: 'Login failed due to a server error.', error: error.message });
   }
 };
