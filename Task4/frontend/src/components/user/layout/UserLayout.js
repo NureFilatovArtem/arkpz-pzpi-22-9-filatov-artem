@@ -1,9 +1,12 @@
-// src/components/user/layout/UserLayout.jsx
+// src/components/user/layout/UserLayout.js
 import React from 'react';
 import { Box, CssBaseline, Toolbar } from '@mui/material';
 import { Outlet } from 'react-router-dom';
-import UserSidebar from '../UserSideBar'; 
-import Header from '../../layout/Header'; // Используем тот же Header, что и в MainLayout
+
+// --- ИСПРАВЛЕННЫЙ ИМПОРТ (без расширения) ---
+import UserSidebar from './UserSidebar'; 
+
+import Header from '../../layout/Header'; 
 
 const UserLayout = () => {
   return (
@@ -15,8 +18,8 @@ const UserLayout = () => {
         component="main"
         sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}
       >
-        <Toolbar /> {/* Для смещения контента ниже Header'a */}
-        <Outlet /> {/* Здесь будут отображаться дочерние страницы */}
+        <Toolbar /> 
+        <Outlet />
       </Box>
     </Box>
   );

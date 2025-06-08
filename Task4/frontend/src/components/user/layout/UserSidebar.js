@@ -1,4 +1,4 @@
-// src/components/user/layout/UserSidebar.jsx
+// src/components/user/layout/UserSidebar.js
 import React from 'react';
 import { Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -11,7 +11,6 @@ const drawerWidth = 240;
 const UserSidebar = () => {
   const { t } = useTranslation();
   const location = useLocation();
-
   const menuItems = [
     { textKey: 'userSidebar.dashboard', path: '/user', icon: <DashboardIcon />, end: true },
     { textKey: 'userSidebar.dataView', path: '/user/data-view', icon: <TableViewIcon /> },
@@ -24,38 +23,22 @@ const UserSidebar = () => {
         width: drawerWidth,
         flexShrink: 0,
         [`& .MuiDrawer-paper`]: {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          backgroundColor: '#ffffff',
-          borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+            width: drawerWidth,
+            boxSizing: 'border-box',
         },
       }}
-      anchor="left"
     >
       <Toolbar />
-      <List sx={{ pt: 1 }}>
+      <List>
         {menuItems.map((item) => (
           <ListItem key={item.textKey} disablePadding>
             <ListItemButton
               component={NavLink}
               to={item.path}
               selected={item.end ? location.pathname === item.path : location.pathname.startsWith(item.path)}
-              end={item.end}
-              sx={{
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
-                  color: 'primary.contrastText',
-                  '&:hover': {
-                    backgroundColor: 'primary.dark',
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.contrastText',
-                  }
-                },
-              }}
             >
               <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={t(item.textKey, item.textKey.split('.')[1])} />
+              <ListItemText primary={t(item.textKey, item.path.split('/').pop())} />
             </ListItemButton>
           </ListItem>
         ))}

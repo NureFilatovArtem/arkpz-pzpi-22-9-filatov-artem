@@ -1,230 +1,370 @@
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+// src/pages/Admin/UserManagementPage.js
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box, Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  Select, MenuItem, CircularProgress, Snackbar, Alert, Typography
+  Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Button, IconButton, Dialog, DialogTitle, DialogContent,
+  DialogActions, TextField, Select, MenuItem, FormControl, InputLabel,
+  Alert, CircularProgress, Chip
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { useTranslation } from 'react-i18next';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { fetchUsers, createUser, updateUser, deleteUser } from '../../services/userService';
-import { useAuth } from '../../contexts/AuthContext';
+import AddIcon from '@mui/icons-material/Add';
+import PersonIcon from '@mui/icons-material/Person';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
-const roles = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'user', label: 'User' },
-];
+import { fetchUsers, createUser, updateUser, deleteUser } from '../../services/userService';
 
 const UserManagementPage = () => {
   const { t } = useTranslation();
-  const { user: currentUser } = useAuth(); // Переименовал, чтобы не было конфликта с user в map
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Состояния для модальных окон
+  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [form, setForm] = useState({ username: '', email: '', password: '', role: 'user' });
+  // Form states
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'user'
+  });
   const [formLoading, setFormLoading] = useState(false);
 
-  useEffect(() => {
-    if (currentUser && currentUser.role === 'admin') {
-      loadUsers();
-    }
-    // eslint-disable-next-line
-  }, [currentUser]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const data = await fetchUsers();
       setUsers(data);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to load users');
+      setError(err?.response?.data?.message || t('userManagement.loadFailed'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleOpenAddModal = () => {
-    setForm({ username: '', email: '', password: '', role: 'user' }); // Сбрасываем форму
+    setFormData({ username: '', email: '', password: '', role: 'user' });
     setIsAddModalOpen(true);
-  };
-  
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-  
-  // --- ОБЪЕДИНЕННАЯ ЛОГИКА СОЗДАНИЯ ПОЛЬЗОВАТЕЛЯ ---
-  const handleAddUser = async () => {
-    setFormLoading(true);
     setError('');
-    try {
-      await createUser(form); // Используем одну функцию createUser для всех
-      setSuccess(t('userManagement.addUserSuccess', 'User added successfully.'));
-      setIsAddModalOpen(false);
-      loadUsers();
-    } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to add user');
-    } finally {
-      setFormLoading(false);
-    }
-  };
-  
-  // Логика редактирования и удаления осталась почти такой же
-  const handleOpenEdit = (user) => {
-    setSelectedUser(user);
-    setForm({ username: user.username, email: user.email, password: '', role: user.role });
-    setIsEditModalOpen(true);
+    setSuccess('');
   };
 
-  const handleEditUser = async () => {
+  const handleOpenEditModal = (user) => {
+    setCurrentUser(user);
+    setFormData({ username: user.username, email: user.email, password: '', role: user.role });
+    setIsEditModalOpen(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleOpenDeleteModal = (user) => {
+    setCurrentUser(user);
+    setIsDeleteModalOpen(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleCloseModals = () => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setIsDeleteModalOpen(false);
+    setCurrentUser(null);
+    setFormData({ username: '', email: '', password: '', role: 'user' });
+    setFormLoading(false);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateUser = async () => {
     setFormLoading(true);
     setError('');
     try {
-      await updateUser(selectedUser.id, form);
-      setSuccess(t('userManagement.editUserSuccess', 'User updated successfully.'));
-      setIsEditModalOpen(false);
+      await createUser(formData);
+      setSuccess(t('userManagement.addUserSuccess'));
+      handleCloseModals();
       loadUsers();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to update user');
+      setError(err?.response?.data?.message || t('userManagement.createFailed'));
     } finally {
       setFormLoading(false);
     }
   };
-  
-  const handleOpenDelete = (user) => {
-    setSelectedUser(user);
-    setIsDeleteModalOpen(true);
+
+  const handleUpdateUser = async () => {
+    setFormLoading(true);
+    setError('');
+    try {
+      await updateUser(currentUser.id, formData);
+      setSuccess(t('userManagement.updateSuccess'));
+      handleCloseModals();
+      loadUsers();
+    } catch (err) {
+      setError(err?.response?.data?.message || t('userManagement.updateFailed'));
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const handleDeleteUser = async () => {
     setFormLoading(true);
     setError('');
     try {
-      await deleteUser(selectedUser.id);
-      setSuccess(t('userManagement.deleteUserSuccess', 'User deleted successfully.'));
-      setIsDeleteModalOpen(false);
+      await deleteUser(currentUser.id);
+      setSuccess(t('userManagement.deleteSuccess'));
+      handleCloseModals();
       loadUsers();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Failed to delete user');
+      setError(err?.response?.data?.message || t('userManagement.deleteFailed'));
     } finally {
       setFormLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>{t('userManagement.title', 'User Management')}</Typography>
-      <Box sx={{ mb: 2 }}>
-        {/* --- ОСТАЛАСЬ ТОЛЬКО ОДНА КНОПКА --- */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          {t('userManagement.title', 'User Management')}
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          color="primary"
           onClick={handleOpenAddModal}
+          color="primary"
         >
-          {t('userManagement.addNewUser', 'Add New User')}
+          {t('userManagement.addUser', 'Add New User')}
         </Button>
       </Box>
 
-      {/* Отображение таблицы и снэкбаров (без изменений) */}
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-      ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
-          {/* Table Head, Body и остальное без изменений */}
-          <Table>
-            <TableHead sx={{ backgroundColor: '#f8f9fa' }}>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>{t('userManagement.table.username')}</TableCell>
-                <TableCell>{t('userManagement.table.email')}</TableCell>
-                <TableCell>{t('userManagement.table.role')}</TableCell>
-                <TableCell>{t('userManagement.table.actions')}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id} hover>
-                  <TableCell>{user.id}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    <IconButton color="primary" onClick={() => handleOpenEdit(user)}><EditIcon /></IconButton>
-                    <IconButton color="error" onClick={() => handleOpenDelete(user)}><DeleteIcon /></IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {users.length === 0 && <TableRow><TableCell colSpan={5} align="center">{t('userManagement.noUsers')}</TableCell></TableRow>}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-      {/* --- ЕДИНОЕ МОДАЛЬНОЕ ОКНО ДЛЯ СОЗДАНИЯ --- */}
-      <Dialog open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('userManagement.addNewUser', 'Add New User')}</DialogTitle>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('userManagement.table.id', 'ID')}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('userManagement.table.username', 'Username')}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('userManagement.table.email', 'Email')}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('userManagement.table.role', 'Role')}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('userManagement.table.actions', 'Actions')}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id} hover>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Chip
+                    icon={user.role === 'admin' ? <AdminPanelSettingsIcon /> : <PersonIcon />}
+                    label={t(`roles.${user.role}`, user.role)}
+                    color={user.role === 'admin' ? 'warning' : 'default'}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => handleOpenEditModal(user)}
+                    sx={{ mr: 1 }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleOpenDeleteModal(user)}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+            {users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                  {t('userManagement.noUsers', 'No users found.')}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Add User Modal */}
+      <Dialog open={isAddModalOpen} onClose={handleCloseModals} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('userManagement.addUser')}</DialogTitle>
         <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label={t('userManagement.table.username')} name="username" value={form.username} onChange={handleFormChange} required fullWidth />
-            <TextField label={t('userManagement.table.email')} name="email" value={form.email} onChange={handleFormChange} required fullWidth type="email" />
-            <TextField label={t('loginPage.passwordLabel')} name="password" value={form.password} onChange={handleFormChange} required fullWidth type="password" />
-            <TextField label={t('userManagement.table.role')} name="role" value={form.role} onChange={handleFormChange} select fullWidth>
-              {roles.map((role) => <MenuItem key={role.value} value={role.value}>{role.label}</MenuItem>)}
-            </TextField>
-          </Box>
+          <TextField
+            label={t('userManagement.usernameLabel')}
+            name="username"
+            value={formData.username}
+            onChange={handleFormChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            label={t('userManagement.emailLabel')}
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleFormChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            label={t('userManagement.passwordLabel')}
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleFormChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>{t('userManagement.roleLabel')}</InputLabel>
+            <Select
+              name="role"
+              value={formData.role}
+              onChange={handleFormChange}
+              label={t('userManagement.roleLabel')}
+            >
+              <MenuItem value="user">{t('roles.user')}</MenuItem>
+              <MenuItem value="admin">{t('roles.admin')}</MenuItem>
+            </Select>
+          </FormControl>
+          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsAddModalOpen(false)}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
-          <Button onClick={handleAddUser} variant="contained" disabled={formLoading} color="primary">
-            {formLoading ? <CircularProgress size={24} /> : t('userManagement.addUser', 'Add User')}
+          <Button onClick={handleCloseModals}>{t('userManagement.actions.cancel')}</Button>
+          <Button
+            onClick={handleCreateUser}
+            variant="contained"
+            disabled={formLoading}
+            color="primary"
+          >
+            {formLoading ? <CircularProgress size={24} /> : t('userManagement.actions.save')}
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Модальные окна для редактирования и удаления (без изменений) */}
-      <Dialog open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('userManagement.actions.editUser', 'Edit User')}</DialogTitle>
+
+      {/* Edit User Modal */}
+      <Dialog open={isEditModalOpen} onClose={handleCloseModals} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('userManagement.editUser')}</DialogTitle>
         <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField label={t('userManagement.table.username')} name="username" value={form.username} onChange={handleFormChange} required fullWidth />
-            <TextField label={t('userManagement.table.email')} name="email" value={form.email} onChange={handleFormChange} required fullWidth type="email" />
-            <TextField label={t('userManagement.table.role')} name="role" value={form.role} onChange={handleFormChange} select fullWidth>
-              {roles.map((role) => <MenuItem key={role.value} value={role.value}>{role.label}</MenuItem>)}
-            </TextField>
-            <TextField label={t('loginPage.passwordLabel')} name="password" value={form.password} onChange={handleFormChange} fullWidth type="password" helperText={t('userManagement.actions.leaveBlank', 'Leave blank to keep current password')} />
-          </Box>
+          <TextField
+            label={t('userManagement.usernameLabel')}
+            name="username"
+            value={formData.username}
+            onChange={handleFormChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            label={t('userManagement.emailLabel')}
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleFormChange}
+            fullWidth
+            margin="normal"
+            required
+          />
+          <TextField
+            label={t('userManagement.passwordLabel')}
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleFormChange}
+            fullWidth
+            margin="normal"
+            helperText={t('userManagement.actions.leaveBlank')}
+          />
+          <FormControl fullWidth margin="normal">
+            <InputLabel>{t('userManagement.roleLabel')}</InputLabel>
+            <Select
+              name="role"
+              value={formData.role}
+              onChange={handleFormChange}
+              label={t('userManagement.roleLabel')}
+            >
+              <MenuItem value="user">{t('roles.user')}</MenuItem>
+              <MenuItem value="admin">{t('roles.admin')}</MenuItem>
+            </Select>
+          </FormControl>
+          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsEditModalOpen(false)}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
-          <Button onClick={handleEditUser} variant="contained" disabled={formLoading}>{formLoading ? <CircularProgress size={24} /> : t('userManagement.actions.updateUser', 'Update User')}</Button>
+          <Button onClick={handleCloseModals}>{t('userManagement.actions.cancel')}</Button>
+          <Button
+            onClick={handleUpdateUser}
+            variant="contained"
+            disabled={formLoading}
+            color="primary"
+          >
+            {formLoading ? <CircularProgress size={24} /> : t('userManagement.actions.save')}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} maxWidth="xs">
-        <DialogTitle>{t('userManagement.actions.deleteUser', 'Delete User')}</DialogTitle>
-        <DialogContent><Typography>{t('userManagement.actions.confirmDelete', 'Are you sure you want to delete this user?')}</Typography></DialogContent>
+      {/* Delete User Modal */}
+      <Dialog open={isDeleteModalOpen} onClose={handleCloseModals}>
+        <DialogTitle>{t('userManagement.deleteUser')}</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {t('userManagement.deleteUserConfirm')}
+          </Typography>
+          {currentUser && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {currentUser.username} ({currentUser.email})
+            </Typography>
+          )}
+          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsDeleteModalOpen(false)}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
-          <Button onClick={handleDeleteUser} color="error" variant="contained" disabled={formLoading}>{formLoading ? <CircularProgress size={24} /> : t('userManagement.actions.delete', 'Delete')}</Button>
+          <Button onClick={handleCloseModals}>{t('userManagement.actions.cancel')}</Button>
+          <Button
+            onClick={handleDeleteUser}
+            variant="contained"
+            disabled={formLoading}
+            color="error"
+          >
+            {formLoading ? <CircularProgress size={24} /> : t('userManagement.actions.delete')}
+          </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Снэкбары */}
-      <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}><Alert severity="success">{success}</Alert></Snackbar>
-      <Snackbar open={!!error && !loading} autoHideDuration={4000} onClose={() => setError('')} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}><Alert severity="error">{error}</Alert></Snackbar>
     </Box>
   );
 };

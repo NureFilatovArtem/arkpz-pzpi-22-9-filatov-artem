@@ -1,140 +1,139 @@
 // src/pages/Admin/DataManagementPage.jsx
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  Box, Typography, Paper, FormGroup, FormControlLabel, Checkbox, TextField, CircularProgress, Alert, Table,
-  TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Collapse, Grid, Button,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Box, Typography, Paper, FormGroup, FormControlLabel, Checkbox, TextField,
+  CircularProgress, Alert, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, IconButton, Collapse, Grid, Button,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Select, // <-- 1. ДОБАВЛЕН НЕДОСТАЮЩИЙ ИМПОРТ
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import { dataFetchers, dataCreators } from '../../services/dataService'; // Импортируем и Creators
 
-// --- РАСШИРЕННАЯ КОНФИГУРАЦИЯ ТАБЛИЦ С ПОЛЯМИ ДЛЯ ФОРМЫ ---
+
+import { 
+  dataFetchers, 
+  dataCreators, 
+  dataUpdaters, 
+  dataDeleters,
+  fetchBuildings, // Для выпадающих списков
+  fetchSensors, // Для выпадающих списков
+  fetchOffices // Для выпадающих списков
+} from '../../services/dataService'; // Используем наш сервис
+
+// Конфигурация таблиц и их полей (важно: имена полей в camelCase, как их возвращает бэкенд)
 const tableConfigs = {
   buildings: { 
     label: 'Buildings', 
-    columns: ['id', 'name', 'address', 'office_id'],
+    columns: [
+      { id: 'id', label: 'ID', isId: true }, 
+      { id: 'name', label: 'Name', isSearchable: true }, 
+      { id: 'address', label: 'Address', isSearchable: true }
+    ],
     formFields: [
-      { name: 'name', label: 'Building Name', type: 'text', required: true },
-      { name: 'address', label: 'Address', type: 'text', required: true },
-      { name: 'office_id', label: 'Office ID', type: 'number', required: true },
+      { id: 'name', label: 'Name', type: 'text', required: true },
+      { id: 'address', label: 'Address', type: 'text', required: true },
     ]
   },
   sensors: { 
     label: 'Sensors', 
-    columns: ['id', 'type', 'building_id'],
+    columns: [
+      { id: 'id', label: 'ID', isId: true }, 
+      { id: 'type', label: 'Type', isSearchable: true }, 
+      { id: 'buildingId', label: 'Building ID', isId: true },
+      { id: 'officeId', label: 'Office ID', isId: true } // Добавил officeId, если есть
+    ],
     formFields: [
-        { name: 'type', label: 'Sensor Type', type: 'text', required: true },
-        { name: 'building_id', label: 'Building ID', type: 'number', required: true },
+      { id: 'type', label: 'Type', type: 'text', required: true },
+      { id: 'buildingId', label: 'Building ID', type: 'select', options: [], required: true, dependsOn: 'buildings' }, // Динамические опции
+      { id: 'officeId', label: 'Office ID', type: 'select', options: [], required: false, dependsOn: 'offices' },
     ]
   },
-  offices: {
+  offices: { 
     label: 'Offices', 
-    columns: ['id', 'name', 'location'],
+    columns: [
+      { id: 'id', label: 'ID', isId: true }, 
+      { id: 'name', label: 'Name', isSearchable: true }, 
+      { id: 'location', label: 'Location', isSearchable: true },
+      { id: 'buildingId', label: 'Building ID', isId: true }
+    ],
     formFields: [
-      { name: 'name', label: 'Office Name', type: 'text', required: true },
-      { name: 'location', label: 'Location', type: 'text', required: true },
+      { id: 'name', label: 'Name', type: 'text', required: true },
+      { id: 'location', label: 'Location', type: 'text', required: true },
+      { id: 'buildingId', label: 'Building ID', type: 'select', options: [], required: true, dependsOn: 'buildings' },
     ]
   },
-  // Для измерений и подписок пока не делаем добавление, т.к. они сложнее
-  measurements: { label: 'Measurements', columns: ['id', 'sensor_id', 'value', 'timestamp'], formFields: [] },
-  subscriptions: { label: 'Subscriptions', columns: ['id', 'user_id', 'sensor_id', 'notification_type'], formFields: [] },
+  measurements: { 
+    label: 'Measurements', 
+    columns: [
+      { id: 'id', label: 'ID', isId: true }, 
+      { id: 'sensorId', label: 'Sensor ID', isId: true }, 
+      { id: 'value', label: 'Value' }, 
+      { id: 'unit', label: 'Unit', isSearchable: true },
+      { id: 'timestamp', label: 'Timestamp' }
+    ],
+    formFields: [
+      { id: 'sensorId', label: 'Sensor ID', type: 'select', options: [], required: true, dependsOn: 'sensors' },
+      { id: 'value', label: 'Value', type: 'number', required: true },
+      { id: 'unit', label: 'Unit', type: 'text', required: true },
+      { id: 'timestamp', label: 'Timestamp', type: 'datetime-local', required: false }
+    ]
+  },
+  subscriptions: { 
+    label: 'Subscriptions', 
+    columns: [
+      { id: 'id', label: 'ID', isId: true }, 
+      { id: 'sensorId', label: 'Sensor ID', isId: true }, 
+      { id: 'callbackUrl', label: 'Callback URL', isSearchable: true }, // Изменено с notification_type
+      { id: 'createdAt', label: 'Created At' }
+    ],
+    formFields: [
+      { id: 'sensorId', label: 'Sensor ID', type: 'select', options: [], required: true, dependsOn: 'sensors' },
+      { id: 'callbackUrl', label: 'Callback URL', type: 'text', required: true },
+      // user_id здесь нет, если он не определен в модели Subscription
+    ]
+  },
 };
 
-
-// --- КОМПОНЕНТ ДИНАМИЧЕСКОЙ ФОРМЫ В МОДАЛЬНОМ ОКНЕ ---
-const DynamicFormDialog = ({ open, onClose, onSubmit, title, fields, loading }) => {
-  const [formData, setFormData] = useState({});
-
-  useEffect(() => {
-    // Сбрасываем форму при открытии
-    if (open) {
-      const initialFormState = fields.reduce((acc, field) => {
-        acc[field.name] = '';
-        return acc;
-      }, {});
-      setFormData(initialFormState);
-    }
-  }, [open, fields]);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{title}</DialogTitle>
-      <Box component="form" onSubmit={handleSubmit}>
-        <DialogContent>
-          {fields.map(field => (
-            <TextField
-              key={field.name}
-              margin="dense"
-              name={field.name}
-              label={field.label}
-              type={field.type || 'text'}
-              required={field.required}
-              fullWidth
-              variant="outlined"
-              value={formData[field.name] || ''}
-              onChange={handleChange}
-            />
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? <CircularProgress size={24}/> : "Create"}
-          </Button>
-        </DialogActions>
-      </Box>
-    </Dialog>
-  );
-}
-
-
-// --- КОМПОНЕНТ УНИВЕРСАЛЬНОЙ ТАБЛИЦЫ (С КНОПКОЙ ADD) ---
-const DynamicDataTable = ({ title, tableKey, data, columns, loading, error, onAdd, onEdit, onDelete }) => {
+// Компонент для отображения таблицы
+const DynamicDataTable = ({ title, data, columns, loading, error, onEdit, onDelete }) => {
   return (
     <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="h5" gutterBottom component="div" sx={{ mb: 0 }}>
-              {title}
-            </Typography>
-            {/* Кнопка ADD теперь здесь! Она не отображается для таблиц, где нет полей формы */}
-            {tableConfigs[tableKey].formFields.length > 0 && (
-              <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => onAdd(tableKey)}>
-                Add New
-              </Button>
-            )}
-        </Box>
-        {loading ? <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}><CircularProgress /></Box> :
-        error ? <Alert severity="error">{error}</Alert> :
-        (
-            <TableContainer component={Paper}>
+        <Typography variant="h5" gutterBottom component="div">
+          {title}
+        </Typography>
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
+        {error && <Alert severity="error">{error}</Alert>}
+        {!loading && !error && (
+            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 2 }}>
                 <Table size="small">
                     <TableHead>
-                        <TableRow>
-                            {columns.map(col => <TableCell key={col} sx={{ fontWeight: 'bold' }}>{col.toUpperCase()}</TableCell>)}
-                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>ACTIONS</TableCell>
+                        <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                            {columns.map(col => <TableCell key={col.id} sx={{ fontWeight: 'bold' }}>{col.label || col.id.toUpperCase()}</TableCell>)}
+                            <TableCell sx={{ fontWeight: 'bold' }}>ACTIONS</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {data.map((row) => (
-                            <TableRow key={row.id} hover>
-                                {columns.map(col => <TableCell key={`${row.id}-${col}`}>{row[col] === null ? 'NULL' : String(row[col])}</TableCell>)}
-                                <TableCell align="right">
-                                    <IconButton size="small" color="primary" onClick={() => onEdit(tableKey, row)}><EditIcon fontSize="inherit" /></IconButton>
-                                    <IconButton size="small" color="error" onClick={() => onDelete(tableKey, row)}><DeleteIcon fontSize="inherit" /></IconButton>
+                            <TableRow key={row.id}>
+                                {columns.map(col => (
+                                  <TableCell key={`${row.id}-${col.id}`}>
+                                    {col.id === 'timestamp' || col.id === 'createdAt' ? new Date(row[col.id]).toLocaleString() : String(row[col.id])}
+                                  </TableCell>
+                                ))}
+                                <TableCell>
+                                    <IconButton size="small" color="primary" onClick={() => onEdit && onEdit(row)}><EditIcon fontSize="inherit" /></IconButton>
+                                    <IconButton size="small" color="error" onClick={() => onDelete && onDelete(row)}><DeleteIcon fontSize="inherit" /></IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -147,7 +146,6 @@ const DynamicDataTable = ({ title, tableKey, data, columns, loading, error, onAd
   );
 };
 
-
 const DataManagementPage = () => {
   const { t } = useTranslation();
   const [selectedTables, setSelectedTables] = useState({});
@@ -156,110 +154,284 @@ const DataManagementPage = () => {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState({});
   const [errors, setErrors] = useState({});
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalConfig, setModalConfig] = useState(null);
-  const [formLoading, setFormLoading] = useState(false);
-  
-  const fetchData = useCallback((key) => {
-    setLoading(prev => ({ ...prev, [key]: true }));
-    dataFetchers[key]()
-      .then(response => setData(prev => ({ ...prev, [key]: response.data })))
-      .catch(err => setErrors(prev => ({ ...prev, [key]: err?.response?.data?.message || `Failed to load ${key}` })))
-      .finally(() => setLoading(prev => ({ ...prev, [key]: false })));
-  }, []);
 
+  // Состояния для модального окна добавления
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addModalType, setAddModalType] = useState(''); // Тип сущности для добавления (e.g., 'buildings')
+  const [addForm, setAddForm] = useState({});
+  const [addFormLoading, setAddFormLoading] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [addSuccess, setAddSuccess] = useState('');
+
+  // Состояние для дополнительных данных для select-ов в формах (например, список зданий для сенсоров)
+  const [relatedData, setRelatedData] = useState({});
+
+  // Загрузка связанных данных для форм (зданий, офисов, сенсоров)
+  useEffect(() => {
+    const loadRelatedData = async () => {
+      try {
+        const [buildingsRes, sensorsRes, officesRes] = await Promise.all([
+          fetchBuildings(),
+          fetchSensors(),
+          fetchOffices(),
+        ]);
+        setRelatedData({
+          buildings: buildingsRes,
+          sensors: sensorsRes,
+          offices: officesRes,
+        });
+      } catch (err) {
+        console.error("Failed to load related data for forms:", err);
+      }
+    };
+    loadRelatedData();
+  }, []); // Загружаем один раз при монтировании
+
+  const fetchData = useCallback(async (key) => {
+    if (loading[key]) return;
+
+    setLoading(prev => ({ ...prev, [key]: true }));
+    setErrors(prev => ({ ...prev, [key]: null }));
+    
+    try {
+      const response = await dataFetchers[key]();
+      setData(prev => ({ ...prev, [key]: response })); // response.data уже обработан normalizeData в dataService
+    } catch (err) {
+      setErrors(prev => ({ ...prev, [key]: err?.response?.data?.message || `Failed to load ${key}` }));
+    } finally {
+      setLoading(prev => ({ ...prev, [key]: false }));
+    }
+  }, [loading]); // fetchData зависит только от loading
+
+  // Загрузка данных при изменении выбранных таблиц
   useEffect(() => {
     Object.keys(selectedTables).forEach(key => {
-      if (selectedTables[key]) {
+      if (selectedTables[key] && !data[key] && !loading[key]) { // Добавлено !loading[key]
         fetchData(key);
       }
     });
-  }, [selectedTables, fetchData]);
+  }, [selectedTables, data, loading, fetchData]);
 
-  // --- ИСПРАВЛЕНА ЛОГИКА ПОИСКА ---
+  const handleCheckboxChange = (event) => {
+    const { name, checked } = event.target;
+    setSelectedTables(prev => ({
+      ...prev,
+      [name]: checked,
+    }));
+    // Если снят чекбокс, очищаем данные для этой таблицы, чтобы они перезагрузились при повторном выборе
+    if (!checked) {
+      setData(prev => {
+        const newState = { ...prev };
+        delete newState[name];
+        return newState;
+      });
+    }
+  };
+
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
-    const lowercasedFilter = searchTerm.toLowerCase();
+    const lowercasedFilter = searchTerm.toLowerCase().trim();
     
     const filtered = {};
     Object.keys(data).forEach(key => {
       if (data[key]) {
         filtered[key] = data[key].filter(item => 
-          Object.values(item).some(val => 
-            // Точное совпадение вместо 'includes' для более релевантного поиска
-            String(val).toLowerCase() === lowercasedFilter
-          )
+          tableConfigs[key].columns.some(col => { // Проверяем только по столбцам, которые можно искать
+            if (col.isSearchable || col.isId) { // Если колонка текстовая или ID
+              const value = String(item[col.id]);
+              if (col.isId && !isNaN(lowercasedFilter)) { // Для ID-полей ищем точное совпадение или startWith
+                return value.startsWith(lowercasedFilter);
+              }
+              return value.toLowerCase().includes(lowercasedFilter);
+            }
+            return false;
+          })
         );
       }
     });
     return filtered;
   }, [searchTerm, data]);
-  
-  const handleOpenAddModal = (tableKey) => {
-    setModalConfig({
-      key: tableKey,
-      title: `Add New ${tableConfigs[tableKey].label}`,
-      fields: tableConfigs[tableKey].formFields,
+
+  // --- Функции для модального окна добавления ---
+  const handleOpenAddModal = (type) => {
+    setAddModalType(type);
+    // Инициализируем форму с дефолтными значениями, если они есть
+    const initialForm = {};
+    tableConfigs[type].formFields.forEach(field => {
+      initialForm[field.id] = field.type === 'number' ? 0 : (field.type === 'select' ? '' : '');
     });
-    setIsModalOpen(true);
+    setAddForm(initialForm);
+    setIsAddModalOpen(true);
   };
-  
-  const handleFormSubmit = async (formData) => {
-    setFormLoading(true);
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+    setAddModalType('');
+    setAddForm({});
+    setAddError('');
+    setAddSuccess('');
+    setAddFormLoading(false);
+  };
+
+  const handleAddFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setAddForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSubmitAdd = async () => {
+    setAddFormLoading(true);
+    setAddError('');
+    setAddSuccess('');
+
     try {
-        const createFn = dataCreators[modalConfig.key];
-        await createFn(formData);
-        setIsModalOpen(false);
-        fetchData(modalConfig.key); // Перезагружаем данные для обновленной таблицы
-    } catch(err) {
-        alert(err?.response?.data?.message || 'Failed to create record.');
+      if (dataCreators[addModalType]) {
+        await dataCreators[addModalType](addForm);
+        setAddSuccess(`Successfully added ${addModalType} record.`);
+        handleCloseAddModal();
+        fetchData(addModalType); // Перезагрузить данные для обновленной таблицы
+      } else {
+        throw new Error('Creator function not found for this type.');
+      }
+    } catch (err) {
+      setAddError(err?.response?.data?.message || err?.message || `Failed to add ${addModalType} record.`);
     } finally {
-        setFormLoading(false);
+      setAddFormLoading(false);
     }
   };
 
-  const handleCheckboxChange = (event) => setSelectedTables({ ...selectedTables, [event.target.name]: event.target.checked });
-  
+  const renderFormFields = (type) => {
+    if (!tableConfigs[type]) return null;
+
+    return tableConfigs[type].formFields.map(field => {
+      if (field.type === 'select' && field.dependsOn && relatedData[field.dependsOn]) {
+        const options = relatedData[field.dependsOn].map(item => ({
+          value: item.id,
+          label: item.name || item.id, // Предполагаем, что у сущностей есть name или id
+        }));
+        return (
+          <FormControl fullWidth key={field.id} margin="normal">
+            <InputLabel>{field.label}</InputLabel>
+            <Select
+              name={field.id}
+              value={addForm[field.id] || ''}
+              onChange={handleAddFormChange}
+              label={field.label}
+              required={field.required}
+            >
+              {options.map(option => (
+                <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        );
+      }
+      return (
+        <TextField
+          key={field.id}
+          label={field.label}
+          name={field.id}
+          type={field.type === 'number' ? 'number' : field.type} // Обработка 'datetime-local' или других типов
+          value={addForm[field.id] || ''}
+          onChange={handleAddFormChange}
+          required={field.required}
+          fullWidth
+          margin="normal"
+          // Для datetime-local нужно форматирование
+          {...(field.type === 'datetime-local' && { InputLabelProps: { shrink: true } })}
+        />
+      );
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>{t('dataManagement.title', 'Data Management')}</Typography>
+      <Typography variant="h4" gutterBottom>
+        {t('dataManagement.title', 'Data Management')}
+      </Typography>
       
-      <Paper sx={{ p: 2, mb: 4, borderRadius: 2 }} elevation={2}>
-        {/* Панель управления с чекбоксами и поиском */}
-        <FormGroup row>{Object.keys(tableConfigs).map((key) => <FormControlLabel key={key} control={<Checkbox checked={!!selectedTables[key]} onChange={handleCheckboxChange} name={key} />} label={tableConfigs[key].label} />)}</FormGroup>
-        <TextField fullWidth variant="outlined" margin="normal" size="small" placeholder="Search for an exact value..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} InputProps={{ startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} /> }}/>
+      {/* --- ИСПРАВЛЕННЫЙ БЛОК ПАНЕЛИ УПРАВЛЕНИЯ --- */}
+      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }} elevation={2}>
+        <Grid container spacing={2} alignItems="center" justifyContent="space-between">
+          
+          {/* Блок с чекбоксами слева */}
+          <Grid item xs={12} lg={8}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              {t('dataManagement.selectData', 'SELECT DATA TO DISPLAY:')}
+            </Typography>
+            <FormGroup row sx={{ flexWrap: 'wrap' }}>
+              {Object.keys(tableConfigs).map((key) => (
+                <FormControlLabel
+                  key={key}
+                  control={<Checkbox checked={!!selectedTables[key]} onChange={handleCheckboxChange} name={key} />}
+                  label={t(`dataManagement.tables.${key}`, tableConfigs[key].label)}
+                  sx={{ mr: 2 }}
+                />
+              ))}
+            </FormGroup>
+          </Grid>
+          
+          {/* Блок с поиском и кнопкой справа */}
+          <Grid item xs={12} lg={4}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  placeholder={t('dataManagement.searchPlaceholder', 'Search...')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => handleOpenAddModal(Object.keys(selectedTables).find(key => selectedTables[key]) || 'buildings')}
+                  sx={{ whiteSpace: 'nowrap' }} // Предотвращает перенос текста на кнопке
+                >
+                  {t('dataManagement.addRecord', 'Add Record')}
+                </Button>
+            </Box>
+          </Grid>
+
+        </Grid>
       </Paper>
       
-      {/* Отображение таблиц */}
-      <Box>{Object.keys(tableConfigs).map((key) => (
+      <Box>
+        {Object.keys(tableConfigs).map((key) => (
           <Collapse in={!!selectedTables[key]} key={key}>
             <DynamicDataTable
-              title={tableConfigs[key].label}
-              tableKey={key}
+              title={t(`dataManagement.tables.${key}`, tableConfigs[key].label)}
               data={filteredData[key] || []}
               columns={tableConfigs[key].columns}
               loading={loading[key]}
               error={errors[key]}
-              onAdd={handleOpenAddModal}
-              onEdit={(table, item) => alert(`Edit ${table} - item ${item.id}`)} // Placeholder
-              onDelete={(table, item) => alert(`Delete ${table} - item ${item.id}`)} // Placeholder
+              // TODO: Implement onEdit and onDelete handlers to open edit/delete modals
+              onEdit={(row) => alert(`Edit ${key} ID: ${row.id}`)}
+              onDelete={(row) => alert(`Delete ${key} ID: ${row.id}`)}
             />
           </Collapse>
         ))}
       </Box>
 
-      {/* Модальное окно */}
-      {modalConfig && (
-        <DynamicFormDialog
-            open={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleFormSubmit}
-            title={modalConfig.title}
-            fields={modalConfig.fields}
-            loading={formLoading}
-        />
-      )}
+      {/* Модальное окно добавления записи */}
+      <Dialog open={isAddModalOpen} onClose={handleCloseAddModal} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('dataManagement.addRecordTitle', `Add New ${tableConfigs[addModalType]?.label || 'Record'}`)}</DialogTitle>
+        <DialogContent>
+          {renderFormFields(addModalType)}
+          {addError && <Alert severity="error" sx={{ mt: 2 }}>{addError}</Alert>}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAddModal}>{t('userManagement.actions.cancel', 'Cancel')}</Button>
+          <Button onClick={handleSubmitAdd} variant="contained" disabled={addFormLoading} color="primary">
+            {addFormLoading ? <CircularProgress size={24} /> : t('userManagement.actions.add', 'Add')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
